@@ -39,6 +39,24 @@ var strSearchword;
 var searchControl2;
 var strSearchword2;
 
+function initialize(){
+	if (loadcheck != 0) {
+	    
+	    strSearchword = loveliveSong[lstMember[cmp1][head1]];
+	    strSearchword = replaceAll(strSearchword,'/',' ');
+    } else {
+    	loadcheck = 1;
+		options = new google.search.SearcherOptions();
+	    searchControl = new google.search.SearchControl();
+	    searchControl.addSearcher(new google.search.VideoSearch());
+	    drawOptions = new google.search.DrawOptions();
+	    searchControl2 = new google.search.SearchControl();
+	    searchControl2.addSearcher(new google.search.VideoSearch());
+    }
+}
+
+google.setOnLoadCallback(initialize);
+
 
 //*********************************************************
 // 
@@ -487,7 +505,7 @@ function removeReset(){
 		document.getElementById("resultField").innerHTML = "";
 		document.getElementById("TWB").innerHTML ="";
 
-		initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar, flagPetit, flagDere, flagDereco, flagDerera, flagMill, flagMillco, flagMillra, flagLvTheme, flagSidem, flagShiny);
+		initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar);
 		showImage();
 	}
 //-->
