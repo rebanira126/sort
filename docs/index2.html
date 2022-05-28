@@ -11,7 +11,6 @@
 
 <title>ラブライブ楽曲ソート</title>
 
-<!-- 【追加コード】 -->
 <script src="compression.js" type="text/javascript"></script>
 <script src="cookie.js" type="text/javascript"></script>
 <script src="http://www.google.com/jsapi" type="text/javascript"></script>
@@ -40,22 +39,21 @@ var searchControl2;
 var strSearchword2;
 
 function initialize(){
-	if (loadcheck != 0) {
-	    
-	    strSearchword = loveliveSong[lstMember[cmp1][head1]];
-	    strSearchword = replaceAll(strSearchword,'/',' ');
-    } else {
-    	loadcheck = 1;
-		options = new google.search.SearcherOptions();
-	    searchControl = new google.search.SearchControl();
-	    searchControl.addSearcher(new google.search.VideoSearch());
-	    drawOptions = new google.search.DrawOptions();
-	    searchControl2 = new google.search.SearchControl();
-	    searchControl2.addSearcher(new google.search.VideoSearch());
-    }
+//	if (loadcheck != 0) {
+//	    strSearchword = loveliveSong[lstMember[cmp1][head1]];
+//	    strSearchword = replaceAll(strSearchword,'/',' ');
+//    } else {
+//    	loadcheck = 1;
+//		options = new google.search.SearcherOptions();
+//	    searchControl = new google.search.SearchControl();
+//	    searchControl.addSearcher(new google.search.VideoSearch());
+//	    drawOptions = new google.search.DrawOptions();
+//	    searchControl2 = new google.search.SearchControl();
+//	    searchControl2.addSearcher(new google.search.VideoSearch());
+//    }
 }
 
-google.setOnLoadCallback(initialize);
+//google.setOnLoadCallback(initialize);
 
 
 //*********************************************************
@@ -364,13 +362,13 @@ function removeCheck(str) {
 function replaceName(str) {
 	var str1;
 
-if (loveliveSong.indexOf(str) > -1 || loveliveSunshineSong.indexOf(str) > -1){
+if (loveliveSong.indexOf(str) > -1 || loveliveSong.indexOf(str) > -1){
 	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！";
-} else if (nijigakuSong.indexOf(str) > -1) {
+} else if (loveliveSunshineSong.indexOf(str) > -1) {
 	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！サンシャイン!!";
-} else if (loveliveSuperStarSong.indexOf(str) > -1) {
+} else if (nijigakuSong.indexOf(str) > -1) {
 	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！虹ヶ咲学園スクールアイドル同好会";
-} else if (petitSong.indexOf(str) > -1) {
+} else if (loveliveSuperStarSong.indexOf(str) > -1) {
 	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！スーパースター!!";
 } else{
 	str1 = str;
@@ -765,17 +763,15 @@ restartCheck('中断しているデータがあるようです。復元します
 function startCheck(str){
 	//Cookieの確認とソート状態の復元
 	if (readCookie('sortFlag') != "" && readCookie('sortRec') != "") {
-		if (Ver == readCookie('Ver')) {
-			if(window.confirm(str)){
-				CookieDel();
-				removeReset();
-				remSameCnt = 0;
-				cookieRec = ""
-				remCookieRec = ""
-				remCnt=0;
-				sortStart();
-			} 
-		}
+		if(window.confirm(str)){
+			CookieDel();
+			removeReset();
+			remSameCnt = 0;
+			cookieRec = ""
+			remCookieRec = ""
+			remCnt=0;
+			sortStart();
+		} 
 	} else {
 		CookieDel();
 		removeReset();
@@ -790,15 +786,10 @@ function startCheck(str){
 function restartCheck(str){
 	//Cookieの確認とソート状態の復元
 	if (readCookie('sortFlag') != "" && readCookie('sortRec') != "") {
-		if (Ver == readCookie('Ver')) {
-			if(window.confirm(str)){
-			// 引数追加 20150331 J
-				sortRestart(0);
-			} else {
-				CookieDel();
-			}
+		if(window.confirm(str)){
+		// 引数追加 20150331 J
+			sortRestart(0);
 		} else {
-			alert('楽曲データが更新されたので中断データを正しく復元できませんでした。');
 			CookieDel();
 		}
 
@@ -813,7 +804,6 @@ function sortBreak() {
 	writeCookie('sortRec', encode(cookieRec), 365);
 	writeCookie('remRec', encode(remCookieRec), 365);
 	writeCookie('remCnt', remSameCnt, 365);
-	writeCookie('Ver',Ver, 365);
 }
 
 // 中断からの再生・アンドゥ flagRes=0で再生-1でアンドゥ 引数追加 20150331 J
