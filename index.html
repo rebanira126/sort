@@ -1,0 +1,766 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<title>ラブライブ楽曲ソート</title>
+<script type="text/javascript">
+<!--
+//*********************************************************
+//
+// 評価する楽曲の名前のリスト
+//
+// この部分を変更して下さい。名前の削除・追加も可能です。
+// 名前を引用符(")で括り、コンマ(,)で区切って下さい。
+// 但し、リストの最後にはコンマを入れてはいけません。
+//
+//*********************************************************
+var namMember = new Array(
+"4 SEASONS",
+"A song for You! You? You!!",
+"After The Rain",
+"Amazing Travel DNA",
+"Anemone heart",
+"Angelic Angel",
+"Anniversary",
+"Aqours Pirates Desire",
+"Aqours☆HEROES",
+"As Time Goes By",
+"Awaken the power",
+"Awakening Promise",
+"Beat in Angel",
+"Beautiful Moonlight",
+"Beginner’s Sailing",
+"Believe again",
+"Braveheart Coaster",
+"Break The System",
+"Brightest Melody",
+"Butterfly",
+"CHANGELESS",
+"CHASE!",
+"COLORFUL VOICE",
+"CRASH MIND",
+"Cheer for you!!",
+"CheerDay CheerGirl!",
+"Colorful Dreams! Colorful Smiles!",
+"Cutie Panther",
+"DIVE！",
+"DREAMY COLOR",
+"DROPOUT!?",
+"Dance with Minotaurus",
+"Dancing Heart La-Pa-Pa-Pa!",
+"Dancing stars on me!",
+"Daring!!",
+"Day1",
+"Daydream Warrior",
+"Dazzling White Town",
+"Dears",
+"Deep Resonance",
+"Deep Sea Cocoon",
+"Departure",
+"Diabolic mulier",
+"Dream Land！Dream World！",
+"Dream Rainbow",
+"Dream with You",
+"Dreamin' Go! Go!!",
+"Dreaming Energy",
+"EMOTION",
+"ENDLESS PARADE",
+"ENJOY IT！",
+"Eternal Light",
+"Eutopia",
+"Evergreen",
+"Fantastic Departure!",
+"Fashionista",
+"Fire Bird",
+"First Love Again",
+"Fly into the sky",
+"Flyer’s High",
+"Future flight",
+"Future style",
+"GALAXY HidE and SeeK",
+"GEMSTONE “DE-A-I”",
+"GOING UP",
+"Guilty Eyes Fever",
+"Guilty Night, Guilty Kiss!",
+"Guilty!? Farewell party",
+"G線上のシンデレラ",
+"HAPPY PARTY TRAIN",
+"HAPPY TO DO WA！",
+"HEART to HEART!",
+"HOT PASSION!!",
+"Happy Nyan! Days",
+"Happy maker!",
+"Hello,星を数えて",
+"Hop? Stop? Nonstop!",
+"Hurray Hurray",
+"INNOCENT BIRD",
+"Infinity！Our wings!!",
+"I’m Still...",
+"JIMO-AI Dash!",
+"Jump up HIGH!!",
+"Just Believe!!!",
+"KOKORO Magic “A to Z”",
+"KU-RU-KU-RU Cruller!",
+"Kakushiaji！",
+"KiRa-KiRa Sensation!",
+"LIKE IT！LOVE IT！",
+"LIVE with a smile!",
+"LONELIEST BABY",
+"LONELY TUNING",
+"LOVELESS WORLD",
+"La Bella Patria",
+"Landing action Yeah!!",
+"Listen to my heart!!",
+"Lonely Snow Planet",
+"Love Pulsar",
+"Love Spiral Tower",
+"Love Triangle",
+"Love U my friends",
+"Love is all, I sing love is all!",
+"Love marginal",
+"Love wing bell",
+"L！L！L！ (Love the Life We Live)",
+"MELODY",
+"MIRACLE WAVE",
+"MIRAI TICKET",
+"MOMENT RING",
+"MONSTER GIRLS",
+"MOTTO-ZUTTO be with you",
+"MUSEUMでどうしたい？",
+"MY舞☆TONIGHT",
+"Make-up session ABC",
+"Margaret",
+"Marine Border Parasol",
+"Maze Town",
+"Memories",
+"Mermaid festa vol.1",
+"Mermaid festa vol.2 ～Passionate～",
+"Message",
+"Misty Frosty Love",
+"Music S.T.A.R.T!!",
+"My Own Fairy-Tale",
+"Märchen Star",
+"NEO SKY, NEO MAP!",
+"NO EXIT ORION",
+"Nameless Love Song",
+"Never giving up!",
+"New Romantic Sailors",
+"New winding road",
+"Next SPARKLING!!",
+"No brand girls",
+"No.10",
+"Not Sad",
+"OKAWARI Happy life!",
+"Oh,Love＆Peace!",
+"Oh！レディ・ステディ・ポジティブ",
+"One More Sunshine Story",
+"Over The Next Rainbow",
+"P.S.の向こう側",
+"PHOENIX DANCE",
+"POWER SPOT!!",
+"PSYCHIC FIRE",
+"PURE PHRASE",
+"Paradise Chime",
+"Paradise Live",
+"Party! Party! PaPaPaParty!",
+"Perfect SEKAI",
+"Phantom Rocket Adventure",
+"Pianoforte Monologue",
+"Poker face＆お願い！Fairy",
+"Poppin' Up!",
+"Pops heartで踊るんだもん！",
+"Primary",
+"Private Wars",
+"Pure girls project",
+"Queendom",
+"RED GEM WINK",
+"RUN KAKERU RUN",
+"Ringing!",
+"SELF CONTROL!!",
+"SENTIMENTAL StepS",
+"SKY JOURNEY",
+"START!! True dreams",
+"START:DASH!!",
+"SUKI for you, DREAM for you!",
+"SUNNY DAY SONG",
+"SUPER NOVA",
+"Say Good-Bye 涙",
+"Shadow gate to love",
+"Shangri-La Shower",
+"Shiny Racers",
+"Shocking Party",
+"Shooting Star Warrior",
+"Shooting Voice!!",
+"Silent Blaze",
+"Silent tonight",
+"Sing & Smile!!",
+"Snow halation",
+"Solitude Rain",
+"Someday of my life",
+"Starlight",
+"Starlight Prologue",
+"Stella!",
+"Step! ZERO to ONE",
+"Storm in Lover",
+"Strawberry Trapper",
+"Super LOVE=Super LIVE!",
+"Sweet Eyes",
+"Swinging！",
+"THE SECRET NiGHT",
+"TO BE YOURSELF",
+"TOKIMEKI Runners",
+"Thank you, FRIENDS!!",
+"Till Sunrise",
+"Tiny Stars",
+"Toy Doll",
+"Trouble Busters",
+"Turn it Up!",
+"Twinkle Town",
+"UNBALANCED LOVE",
+"VIVID WORLD",
+"WAO-WAO Powerful day!",
+"WATER BLUE NEW WORLD",
+"WHITE FIRST LOVE",
+"WILD STARS",
+"WONDERFUL STORIES",
+"Wake up, Challenger!!",
+"Waku-Waku-Week!",
+"We'll get the next dream!!!",
+"What a Wonderful Dream!!",
+"Whistle of Revolution",
+"Wish",
+"Wish Song",
+"Wonder zone",
+"Wonderful Rush",
+"after school NAVIGATORS",
+"baby maybe 恋のボタン",
+"i-n-g, I TRY!!",
+"in this unstable world",
+"not ALONE not HITORI",
+"smile smile ship Start!",
+"soldier game",
+"sweet&sweet holiday",
+"“MY LIST” to you!",
+"☆ワンダーランド☆",
+"あこがれランララン",
+"あなたの理想のヒロイン",
+"ありふれた悲しみの果て",
+"ある日…永遠みたいに！",
+"あ・の・ね・が・ん・ば・れ！",
+"いつだってfor you!",
+"おやすみなさん！",
+"きっと青春が聞こえる",
+"くるりんMIRACLE",
+"この街でいまキミと",
+"これから",
+"これからのSomeday",
+"これまでのラブライブ！ ～ミュージカルver.～",
+"さかなかなんだか？",
+"さようならへさよなら！",
+"ずるいよMagnetic today",
+"そして最後のページには",
+"それは僕たちの奇跡",
+"だいすきのうた",
+"だから僕らは鳴らすんだ！",
+"だってだって噫無情",
+"ときめき分類学",
+"どんなときもずっと",
+"なってしまった！",
+"なわとび",
+"なんどだって約束！",
+"にこぷり♡女子道",
+"ふたりハピネス",
+"ぶる～べりぃ♡とれいん",
+"ぷわぷわーお!",
+"ほんのちょっぴり",
+"まほうつかいはじめました！",
+"みてろ！",
+"めっちゃGoing!!",
+"もうひとりじゃないよ",
+"もぎゅっと“love”で接近中！",
+"もしもからきっと",
+"もっとね！",
+"やあ！行雲流水！？",
+"やがてひとつの物語",
+"るてしキスキしてる",
+"アナログハート",
+"エイエ戦サー",
+"オードリー",
+"キセキヒカル",
+"キミのくせに！",
+"キモチもユメも一緒だね！",
+"クレッシェンドゆ・ら",
+"グソクムシのうた",
+"コットンキャンディえいえいおー！",
+"コドク・テレポート",
+"コワレヤスキ",
+"コンセントレイト！",
+"サイコーハート",
+"サクラバイバイ",
+"サンシャインぴっかぴか音頭",
+"シアワセ行きのSMILING!",
+"シャゼリア☆キッス	",
+"シャゼリア☆キッス☆ダダンダーン",
+"ジングルベルがとまらない",
+"ススメ→トゥモロウ",
+"スピカテリブル",
+"スリリング・ワンウェイ",
+"タカラモノズ",
+"タテホコツバサ",
+"ダイアモンド",
+"ダイスキだったらダイジョウブ！",
+"ダイヤモンドプリンセスの憂鬱",
+"ツナガルコネクト",
+"テレテレパシー",
+"トゥ トゥ トゥ！",
+"トリコリコPLEASE!!",
+"トワイライト",
+"ドキピポ☆エモーション",
+"ドラゴンライダーズ",
+"ノンフィクション!!",
+"ハジマリロード",
+"ハミングフレンド",
+"バイバイしちゃえば！？",
+"ヒロインズ☆ランウェイ",
+"フォルクロア ～歓喜の歌～",
+"ホップ・ステップ・ワーイ！",
+"ミはμ'sicのミ",
+"ミラクル STAY TUNE！",
+"メイズセカイ",
+"メタモルフィズム",
+"ヤダ！",
+"ユニゾン",
+"ユメノトビラ",
+"ユメ語るよりユメ歌おう",
+"ラブノベルス",
+"リバーブ",
+"乙女式れんあい塾",
+"乙姫心で恋宮殿",
+"予測不可能Driving!",
+"僕たちはひとつの光",
+"僕らのLIVE 君とのLIFE",
+"僕らの走ってきた道は…",
+"僕らは今のなかで",
+"元気全開DAY! DAY! DAY!",
+"全速ドリーマー",
+"冒険Type A, B, C!!",
+"冬がくれた予感",
+"勇気のReason",
+"勇気のカケラ",
+"勇気はどこに？君の胸に！",
+"卒業ですね",
+"友 & 愛",
+"友情ノーチェンジ",
+"同じ星が見たい",
+"君のこころは輝いてるかい？",
+"君の瞳を巡る冒険",
+"告白日和、です！",
+"哀温ノ詩",
+"地元愛♡満タン☆サマーライフ",
+"声繋ごうよ",
+"変わらないすべて",
+"夏、終わらないで。",
+"夏の終わりの雨音が",
+"夏への扉 Never end ver.",
+"夏色えがおで1,2,Jump!",
+"夜明珠（イエミンジュ）",
+"夜空はなんでも知ってるの？",
+"夢がここからはじまるよ",
+"夢が僕らの太陽さ",
+"夢で夜空を照らしたい",
+"夢なき夢は夢じゃない",
+"夢への一歩",
+"太陽を追いかけろ！",
+"女性シンガー	",
+"好きですが好きですか？",
+"始まりは君の空",
+"孤独なHeaven",
+"小夜啼鳥恋詩",
+"少女以上の恋がしたい",
+"届かない星だとしても",
+"嵐のなかの恋だから",
+"常夏☆サンシャイン",
+"待ってて愛のうた",
+"微熱からMystery",
+"微熱のワルツ",
+"心の羽よ君へ飛んでけ！",
+"心キラララ",
+"思い出以上になりたくて",
+"恋するMagic!!",
+"恋になりたいAQUARIUM",
+"恋のシグナルRin rin rin!",
+"想いよひとつになれ",
+"愛してるばんざーい！",
+"愛は太陽じゃない？",
+"探して！Future",
+"春情ロマンティック",
+"最低で最高のParadiso",
+"未体験HORIZON",
+"未来の僕らは知ってるよ",
+"未来は風のように",
+"未来ハーモニー",
+"未来予報ハレルヤ！",
+"未熟DREAMER",
+"楽しいの天才",
+"水色のSunday",
+"永遠フレンズ",
+"決めたよHand in Hand",
+"決意の光",
+"海岸通りで待ってるよ",
+"涙×",
+"涙が雪になる前に",
+"無敵級*ビリーバー",
+"真夏は誰のモノ？",
+"眠れる森に行きたいな",
+"瞬きの先へ",
+"知らないLove*教えてLove",
+"硝子の花園",
+"祭花 -saika-",
+"私たちは未来の花",
+"私のSymphony",
+"秋のあなたの空遠く",
+"空も心も晴れるから",
+"空中恋愛論",
+"突然GIRL",
+"純愛レンズ",
+"繚乱！ビクトリーロード",
+"翠いカナリア",
+"聖なる日の祈り",
+"虹色Passions！",
+"輝夜の城で踊りたい",
+"近未来ハッピーエンド",
+"逃走迷走メビウスループ",
+"錯覚CROSSROADS",
+"開花宣言",
+"青空Jumping Heart",
+"青空を待ってる",
+"？←HEARTBEAT"
+
+);
+//*********************************************************
+
+var lstMember = new Array();
+var parent = new Array();
+var equal = new Array();
+var rec = new Array();
+var cmp1,cmp2;
+var head1,head2;
+var nrec;
+
+var numQuestion;
+var totalSize;
+var finishSize;
+var finishFlag;
+
+//変数の初期化+++++++++++++++++++++++++++++++++++++++++++++
+function initList(){
+	var n = 0;
+	var mid;
+	var i;
+
+	//ソートすべき配列
+	lstMember[n] = new Array();
+	for (i=0; i<namMember.length; i++) {
+		lstMember[n][i] = i;
+	}
+	parent[n] = -1;
+	totalSize = 0;
+	n++;
+
+	for (i=0; i<lstMember.length; i++) {
+		//要素数が２以上なら２分割し、
+		//分割された配列をlstMemberの最後に加える
+		if(lstMember[i].length>=2) {
+			mid = Math.ceil(lstMember[i].length/2);
+			lstMember[n] = new Array();
+			lstMember[n] = lstMember[i].slice(0,mid);
+			totalSize += lstMember[n].length;
+			parent[n] = i;
+			n++;
+			lstMember[n] = new Array();
+			lstMember[n] = lstMember[i].slice(mid,lstMember[i].length);
+			totalSize += lstMember[n].length;
+			parent[n] = i;
+			n++;
+		}
+	}
+
+	//保存用配列
+	for (i=0; i<namMember.length; i++) {
+		rec[i] = 0;
+	}
+	nrec = 0;
+
+	//引き分けの結果を保存するリスト
+	//キー：リンク始点の値
+	// 値 ：リンク終点の値
+	for (i=0; i<=namMember.length; i++) {
+		equal[i] = -1;
+	}
+
+	cmp1 = lstMember.length-2;
+	cmp2 = lstMember.length-1;
+	head1 = 0;
+	head2 = 0;
+	numQuestion = 1;
+	finishSize = 0;
+	finishFlag = 0;
+}
+
+//リストのソート+++++++++++++++++++++++++++++++++++++++++++
+//flag：比較結果
+//  -1：左を選択
+//   0：引き分け
+//   1：右を選択
+function sortList(flag){
+	var i;
+	var str;
+
+	//recに保存
+	if (flag<0) {
+		rec[nrec] = lstMember[cmp1][head1];
+		head1++;
+		nrec++;
+		finishSize++;
+		while (equal[rec[nrec-1]]!=-1) {
+			rec[nrec] = lstMember[cmp1][head1];
+			head1++;
+			nrec++;
+			finishSize++;
+		}
+	}
+	else if (flag>0) {
+		rec[nrec] = lstMember[cmp2][head2];
+		head2++;
+		nrec++;
+		finishSize++;
+		while (equal[rec[nrec-1]]!=-1) {
+			rec[nrec] = lstMember[cmp2][head2];
+			head2++;
+			nrec++;
+			finishSize++;
+		}
+	}
+	else {
+		rec[nrec] = lstMember[cmp1][head1];
+		head1++;
+		nrec++;
+		finishSize++;
+		while (equal[rec[nrec-1]]!=-1) {
+			rec[nrec] = lstMember[cmp1][head1];
+			head1++;
+			nrec++;
+			finishSize++;
+		}
+		equal[rec[nrec-1]] = lstMember[cmp2][head2];
+		rec[nrec] = lstMember[cmp2][head2];
+		head2++;
+		nrec++;
+		finishSize++;
+		while (equal[rec[nrec-1]]!=-1) {
+			rec[nrec] = lstMember[cmp2][head2];
+			head2++;
+			nrec++;
+			finishSize++;
+		}
+	}
+
+	//片方のリストを走査し終えた後の処理
+	if (head1<lstMember[cmp1].length && head2==lstMember[cmp2].length) {
+		//リストcmp2が走査済 - リストcmp1の残りをコピー
+		while (head1<lstMember[cmp1].length){
+			rec[nrec] = lstMember[cmp1][head1];
+			head1++;
+			nrec++;
+			finishSize++;
+		}
+	}
+	else if (head1==lstMember[cmp1].length && head2<lstMember[cmp2].length) {
+		//リストcmp1が走査済 - リストcmp2の残りをコピー
+		while (head2<lstMember[cmp2].length){
+			rec[nrec] = lstMember[cmp2][head2];
+			head2++;
+			nrec++;
+			finishSize++;
+		}
+	}
+
+	//両方のリストの最後に到達した場合は
+	//親リストを更新する
+	if (head1==lstMember[cmp1].length && head2==lstMember[cmp2].length) {
+		for (i=0; i<lstMember[cmp1].length+lstMember[cmp2].length; i++) {
+			lstMember[parent[cmp1]][i] = rec[i];
+		}
+		lstMember.pop();
+		lstMember.pop();
+		cmp1 = cmp1-2;
+		cmp2 = cmp2-2;
+		head1 = 0;
+		head2 = 0;
+
+		//新しい比較を行う前にrecを初期化
+		if (head1==0 && head2==0) {
+			for (i=0; i<namMember.length; i++) {
+				rec[i] = 0;
+			}
+			nrec = 0;
+		}
+	}
+
+	if (cmp1<0) {
+		str = "Sort No."+(numQuestion-1)+"<br>"+Math.floor(finishSize*100/totalSize)+"% sorted.";
+		document.getElementById("battleNumber").innerHTML = str;
+
+		showResult();
+		finishFlag = 1;
+	}
+	else {
+		showImage();
+	}
+}
+
+//結果の表示+++++++++++++++++++++++++++++++++++++++++++++++
+function showResult() {
+	var ranking = 1;
+	var sameRank = 1;
+	var str = "";
+	var i;
+
+	str += "<table style=\"width:200px; font-size:12px; line-height:120%; margin-left:auto; margin-right:auto; border:1px solid #000; border-collapse:collapse\" align=\"center\">";
+	str += "<tr><td style=\"color:#ffffff; background-color:#000; text-align:center;\">順位<\/td><td style=\"color:#ffffff; background-color:#000; text-align:center;\">名前<\/td><\/tr>";
+
+	for (i=0; i<namMember.length; i++) {
+		str += "<tr><td style=\"border:1px solid #000; text-align:right; padding-right:5px;\">"+ranking+"<\/td><td style=\"border:1px solid #000; padding-left:5px;\">"+namMember[lstMember[0][i]]+"<\/td><\/tr>";
+		if (i<namMember.length-1) {
+			if (equal[lstMember[0][i]]==lstMember[0][i+1]) {
+				sameRank++;
+			} else {
+				ranking += sameRank;
+				sameRank = 1;
+			}
+		}
+	}
+	str += "<\/table>";
+
+	document.getElementById("resultField").innerHTML = str;
+}
+
+//比較する２つ要素の表示+++++++++++++++++++++++++++++++++++
+function showImage() {
+	var str0 = "Sort No."+numQuestion+"<br>"+Math.floor(finishSize*100/totalSize)+"% sorted.";
+	var str1 = ""+toNameFace(lstMember[cmp1][head1]);
+	var str2 = ""+toNameFace(lstMember[cmp2][head2]);
+
+	document.getElementById("battleNumber").innerHTML = str0;
+	document.getElementById("leftField").innerHTML = str1;
+	document.getElementById("rightField").innerHTML = str2;
+
+	numQuestion++;
+}
+
+//数値を名前（顔文字）に変換+++++++++++++++++++++++++++++++
+function toNameFace(n){
+	var str = namMember[n];
+
+	//顔文字を追加する場合は以下のコメントアウトを外す
+	//namMemberのインデックスと矛盾しないように注意
+	/*
+	str += "<br>────<br>";
+	switch(n) {
+		//case -1 はサンプルなので削除すること
+		case -1: str+="（ ´∀｀）";break;
+		default: str+=""+n;
+	}
+	*/
+	return str;
+}
+//-->
+</script>
+<style type="text/css">
+<!--
+/**********************************************************
+
+ 表のスタイルを変更する場合はここを編集してください。
+
+**********************************************************/
+#mainTable{
+	font-size: 16px;
+	font-family: 'ＭＳ Ｐゴシック',sans-serif;
+	text-align: center;
+	vertical-align: middle;
+	width: 410px;
+	margin-left: auto;
+	margin-right: auto;
+	border-collapse: separate;
+	border-spacing: 10px 5px;
+}
+#leftField{
+	width: 120px;
+	height: 150px;
+	border: 1px solid #000;
+}
+#rightField{
+	width: 120px;
+	height: 150px;
+	border: 1px solid #000;
+}
+.middleField{
+	width: 120px;
+	height: 70px;
+	border: 1px solid #000;
+}
+//-->
+</style>
+</head>
+
+<body>
+<br><br><br>
+<Div align=" center"><b><font size="5">ラブライブ楽曲ソート</Div></b></font></p>
+<br>
+<table id="mainTable" align="center">
+	<tr>
+		<td id="battleNumber" colspan="3" style="padding-bottom: 10px;">
+			 
+		</td>
+	</tr>
+	<tr>
+		<td id="leftField" onClick="if(finishFlag==0)sortList(-1);" rowspan="2">
+			 
+		</td>
+		<td class="middleField" onClick="if(finishFlag==0)sortList(0);">
+			引き分け
+		</td>
+		<td id="rightField" onClick="if(finishFlag==0)sortList(1);" rowspan="2">
+			 
+		</td>
+	</tr>
+	<tr>
+		<td class="middleField" onClick="if(finishFlag==0)sortList(0);">
+			どうでもいい
+		</td>
+	</tr>
+</table><br><br>
+<div id="resultField" style="text-align:center;">
+<p>好きな方（または引き分け）をクリックで選択してください。</p>
+</div>
+<script type="text/javascript">
+<!--
+	initList();
+	showImage();
+//-->
+</script>
+
+
+<script type="text/javascript"><!--
+var fc2footerparam = 'charset=' + encodeURIComponent(document.charset ? document.charset : document.characterSet) + '&url=' + encodeURIComponent(document.location) + '&service=0&r=' + Math.floor(Math.random()*99999999999);
+var fc2footertag = '<' + 'script src="//vip.chps-api.fc2.com/apis/footer/?' + fc2footerparam + '" charset="UTF-8"><' + '/script>';
+document.write(fc2footertag);
+//--></script>
+<!-- FC2, inc.-->
+<img src="//media.fc2.com/counter_img.php?id=50" style="visibility:hidden" alt="inserted by FC2 system" width="0" height="0">
+<!-- FC2, inc.-->
+</body>
+</html>
