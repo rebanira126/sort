@@ -20,6 +20,7 @@ var flagLovelive = 0;
 var flagLoveliveSunshine = 0;
 var flagNijigaku = 0;
 var flagLoveliveSuperStar = 0;
+var flagLoveliveOther = 0;
 var flagRes = 0;
 var cookieRec = "";
 var remCookieRec = "";
@@ -37,6 +38,7 @@ var drawOptions;
 // ラブライブ！サンシャイン!!:lovelive_sunshine.txt
 // ラブライブ！虹ヶ咲学園スクールアイドル同好会:nijigaku.txt
 // ラブライブ！スーパースター!!:lovelive_superstar.txt
+// その他:lovelive_other.txt
 //
 //*********************************************************
 var loveliveSong = new Array(
@@ -49,6 +51,9 @@ var nijigakuSong = new Array(
 );
 
 var loveliveSuperStarSong = new Array(
+);
+
+var loveliveOther = new Array(
 );
 //*********************************************************
 
@@ -90,7 +95,7 @@ function getFile(filePath) {
 }
 
 //変数の初期化+++++++++++++++++++++++++++++++++++++++++++++
-function initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar){
+function initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveOther){
 	var n = 0;
 	var mid;
 	var i;
@@ -107,6 +112,7 @@ function initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLovelive
 	if (flagLoveliveSunshine == 1) loveliveAllSong = loveliveAllSong.concat(loveliveSunshineSong);
 	if (flagNijigaku == 1) loveliveAllSong = loveliveAllSong.concat(nijigakuSong);
 	if (flagLoveliveSuperStar == 1) loveliveAllSong = loveliveAllSong.concat(loveliveSuperStarSong);
+	if (flagLoveliveOther == 1) loveliveAllSong = loveliveAllSong.concat(loveliveOtherSong);
 
 	//ソートすべき配列
 	lstMember[n] = new Array();
@@ -343,6 +349,8 @@ if (loveliveSong.indexOf(str) > -1 || loveliveSong.indexOf(str) > -1){
 	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！虹ヶ咲学園スクールアイドル同好会";
 } else if (loveliveSuperStarSong.indexOf(str) > -1) {
 	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！スーパースター!!";
+} else if (loveliveOtherSong.indexOf(str) > -1) {
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "その他(共通楽曲)";
 } else{
 	str1 = str;
 }
@@ -469,12 +477,17 @@ function removeReset(){
 		} else {
 			flagLoveliveSuperStar = 0;
 		}
+		if (document.getElementById('ckLoveliveOther').checked) {
+			flagLoveliveOther = 1;
+		} else {
+			flagLoveliveOther = 0;
+		}
 		
 		
 		document.getElementById("resultField").innerHTML = "";
 		document.getElementById("TWB").innerHTML ="";
 
-		initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar);
+		initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveOther);
 		showImage();
 	}
 //-->
@@ -606,7 +619,8 @@ td.ads{
 				<script type="text/javascript">nijigakuSong = getFile("nijigaku.txt"); </script><a href="javascript:void(0);" onclick="openWin('nijigaku.txt')"><script type="text/javascript"> document.write(nijigakuSong.length)</script>曲</a> )
 				<input type="checkbox" id="ckLoveliveSuperStar" name="ckLoveliveSuperStar" >ラブライブ！スーパースター!!(
 				<script type="text/javascript">loveliveSuperStarSong = getFile("lovelive_superstar.txt"); </script><a href="javascript:void(0);" onclick="openWin('lovelive_superstar.txt')"><script type="text/javascript"> document.write(loveliveSuperStarSong.length)</script>曲</a> )
-
+				<input type="checkbox" id="ckLoveliveOther" name="ckLoveliveOther" >その他(共通楽曲)(
+				<script type="text/javascript">loveliveOther = getFile("lovelive_other.txt"); </script><a href="javascript:void(0);" onclick="openWin('lovelive_other.txt')"><script type="text/javascript"> document.write(loveliveOther.length)</script>曲</a> )
 
 <br>
 
@@ -757,7 +771,7 @@ function restartCheck(str){
 
 // 中断する
 function sortBreak() {
-	var flag = "" + flagLovelive + "" + flagLoveliveSunshine + "" + flagNijigaku + "" + flagLoveliveSuperStar;
+	var flag = "" + flagLovelive + "" + flagLoveliveSunshine + "" + flagNijigaku + "" + flagLoveliveSuperStar + "" + flagLoveliveOther;
 	writeCookie('sortFlag', flag, 365);
 	writeCookie('sortRec', encode(cookieRec), 365);
 	writeCookie('remRec', encode(remCookieRec), 365);
@@ -779,6 +793,7 @@ function sortRestart(flagRes) {
 			case 1: flagLoveliveSunshine = flag1; break;
 			case 2: flagNijigaku = flag1; break;
 			case 3: flagLoveliveSuperStar = flag1; break;
+			case 4: flagLoveliveOther = flag1; break;
 		}
 	}
 	
@@ -805,8 +820,13 @@ function sortRestart(flagRes) {
 	} else {
 		document.getElementById('ckLoveliveSuperStar').checked = false;
 	}
+	if (flagLoveliveOther == 1) {
+		document.getElementById('ckLoveliveOther').checked = true;
+	} else {
+		document.getElementById('ckLoveliveOther').checked = false;
+	}
 
-	initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar);
+	initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveOther);
 	document.getElementById("resultField").innerHTML = "";
 	document.getElementById("TWB").innerHTML ="";
 	var str = readCookie('sortRec');
