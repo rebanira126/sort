@@ -13,11 +13,6 @@
 
 <script src="compression.js" type="text/javascript"></script>
 <script src="cookie.js" type="text/javascript"></script>
-<script src="http://www.google.com/jsapi" type="text/javascript"></script>
-
-<script type="text/javascript"
-        src="//jsoon.digitiminimi.com/js/widgetoon.js"></script>
-
 <script type="text/javascript">
 <!--
 var flagLovelive = 0;
@@ -33,28 +28,6 @@ var loadcheck = 0;
 var lockUpdateDOM = false;
 var options;
 var drawOptions;
-var searchControl;
-var strSearchword;
-var searchControl2;
-var strSearchword2;
-
-function initialize(){
-//	if (loadcheck != 0) {
-//	    strSearchword = loveliveSong[lstMember[cmp1][head1]];
-//	    strSearchword = replaceAll(strSearchword,'/',' ');
-//    } else {
-//    	loadcheck = 1;
-//		options = new google.search.SearcherOptions();
-//	    searchControl = new google.search.SearchControl();
-//	    searchControl.addSearcher(new google.search.VideoSearch());
-//	    drawOptions = new google.search.DrawOptions();
-//	    searchControl2 = new google.search.SearchControl();
-//	    searchControl2.addSearcher(new google.search.VideoSearch());
-//    }
-}
-
-//google.setOnLoadCallback(initialize);
-
 
 //*********************************************************
 // 
@@ -63,7 +36,6 @@ function initialize(){
 // ラブライブ！サンシャイン!!:lovelive_sunshine.txt
 // ラブライブ！虹ヶ咲学園スクールアイドル同好会:nijigaku.txt
 // ラブライブ！スーパースター!!:lovelive_superstar.txt
-
 //
 //*********************************************************
 var loveliveSong = new Array(
@@ -465,8 +437,6 @@ function showImage() {
 			removeTable += "</tr></table>";
 		}
 		document.getElementById("remove").innerHTML = removeTable;
-	
-		initialize();
 	}
 }
 
@@ -620,9 +590,6 @@ td.ads{
 <div style="text-align:center; background-color:#000000; color:#FFFFFF;">
 ラブライブ！　楽曲ソート
 
-<script> widgetoon_main(); </script>
-
-
 </div>
 <div style="text-align:center;">
 <table style="margin-left:auto; margin-right:auto; background-color:#FFFFFF;">
@@ -673,17 +640,14 @@ td.ads{
 						&nbsp;
 					</td>
 				</tr>
-				<!-- 20150331 Undo対応ボタン行追加 Start J -->
 				<tr>
 					<td class="middleField" style="font-size:12px;" onClick="remSameCnt = 0; sortRestart(-1);">
 						ひとつ前に戻す
 					</td>
 				</tr>
-				<!-- 20150331 Undo対応ボタン行追加 End J   -->
-				
-				<!-- 201504010 除外機能-->
+
 				<tr>
-									<td id="leftField2" style="height:30px; font-size:10px; background-color:#DEF;" onClick="remSameCnt = 0; if(finishFlag==0)sortList(-2);">
+					<td id="leftField2" style="height:30px; font-size:10px; background-color:#DEF;" onClick="remSameCnt = 0; if(finishFlag==0)sortList(-2);">
 						&nbsp;
 					</td>
 					<td class="middleField" style="height:30px; font-size:10px; background-color:#DEF;" onClick="remSameCnt = 0; if(finishFlag==0)sortList(99);">
@@ -693,20 +657,18 @@ td.ads{
 						&nbsp;
 					</td>
 				</tr>
-				<!--除外機能ここまで-->
+
 
 			</table>
 			<br>
 			<div id="sentence">
 		
-		<!--20150401 list.txt新規ウィンドウオープン-->
 		<script language="JavaScript" type="text/javascript">
 		function openWin(path){
   			newWin = window.open(path,'sampleWin','width=520,height=400,scrollbars=yes,status=no,toolbar=no,location=no,menubar=no,resizable=yes');
   			newWin.focus();
 		}
 		</script>
-		<!--ここまで-->
 
 			<hr style="height=1px;">
 			</p>
@@ -742,14 +704,6 @@ f.submit();
 	</tr>
 </table>
 
-<script type="text/javascript">
-<!--
-//	sortStart();
-//-->
-</script>
-
-
-
 </body>
 </html>
 
@@ -784,7 +738,6 @@ function restartCheck(str){
 	//Cookieの確認とソート状態の復元
 	if (readCookie('sortFlag') != "" && readCookie('sortRec') != "") {
 		if(window.confirm(str)){
-		// 引数追加 20150331 J
 			sortRestart(0);
 		} else {
 			CookieDel();
@@ -803,8 +756,7 @@ function sortBreak() {
 	writeCookie('remCnt', remSameCnt, 365);
 }
 
-// 中断からの再生・アンドゥ flagRes=0で再生-1でアンドゥ 引数追加 20150331 J
-// 20150408 除外対応 (rem関連)  J
+// 中断からの再生・アンドゥ
 function sortRestart(flagRes) {
 	var flag = readCookie('sortFlag');
 	var flag1;
@@ -856,7 +808,6 @@ function sortRestart(flagRes) {
 	var remStr1;
 	var resLenCnt;
 
-// undo対応 20150331 Start J
 	cookieRec = ""
 	remCookieRec = ""
 	resLenCnt = str.length;
@@ -867,8 +818,6 @@ function sortRestart(flagRes) {
 	CookieDel();
 	// このsortList()の中でコールされるDOM操作が重いので、一旦ロック
 	lockUpdateDOM = true;
-// undo対応 20150331 End J
-// ↓str.lengthからresLenCntに変更 20150331 J
 	for (var i = 0; i < resLenCnt; i++) {
 		str1 = str.substring(i, i+1);
 		remStr1 = remStr.substring(i, i+1);
