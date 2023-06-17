@@ -20,7 +20,7 @@ var flagLovelive = 0;
 var flagLoveliveSunshine = 0;
 var flagNijigaku = 0;
 var flagLoveliveSuperStar = 0;
-var flagLoveliveHasunosoraSong = 0;
+var flagLoveliveHasunosora = 0;
 var flagSchoolIdolMusical = 0;
 var flagLoveliveOther = 0;
 var flagRes = 0;
@@ -105,7 +105,7 @@ function getFile(filePath) {
 }
 
 //変数の初期化+++++++++++++++++++++++++++++++++++++++++++++
-function initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosoraSong,flagSchoolIdolMusical,flagLoveliveOther){
+function initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagLoveliveOther){
 	var n = 0;
 	var mid;
 	var i;
@@ -494,9 +494,9 @@ function removeReset(){
 			flagLoveliveSuperStar = 0;
 		}
 		if (document.getElementById('ckLoveliveHasunosora').checked) {
-			flagLoveliveHasunosoraSong = 1;
+			flagLoveliveHasunosora = 1;
 		} else {
-			flagLoveliveHasunosoraSong = 0;
+			flagLoveliveHasunosora = 0;
 		}
 		if (document.getElementById('ckSchoolIdolMusical').checked) {
 			flagSchoolIdolMusical = 1;
@@ -513,7 +513,7 @@ function removeReset(){
 		document.getElementById("resultField").innerHTML = "";
 		document.getElementById("TWB").innerHTML ="";
 
-		initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosoraSong,flagSchoolIdolMusical,flagLoveliveOther);
+		initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagLoveliveOther);
 		showImage();
 	}
 //-->
@@ -800,7 +800,7 @@ function restartCheck(str){
 
 // 中断する
 function sortBreak() {
-	var flag = "" + flagLovelive + "" + flagLoveliveSunshine + "" + flagNijigaku + "" + flagLoveliveSuperStar + "" + flagLoveliveHasunosoraSong + "" + flagSchoolIdolMusical + "" + flagLoveliveOther;
+	var flag = "" + flagLovelive + "" + flagLoveliveSunshine + "" + flagNijigaku + "" + flagLoveliveSuperStar + "" + flagLoveliveHasunosora + "" + flagSchoolIdolMusical + "" + flagLoveliveOther;
 	writeCookie('sortFlag', flag, 365);
 	writeCookie('sortRec', encode(cookieRec), 365);
 	writeCookie('remRec', encode(remCookieRec), 365);
@@ -822,7 +822,7 @@ function sortRestart(flagRes) {
 			case 1: flagLoveliveSunshine = flag1; break;
 			case 2: flagNijigaku = flag1; break;
 			case 3: flagLoveliveSuperStar = flag1; break;
-			case 4: flagLoveliveHasunosoraSong = flag1; break;
+			case 4: flagLoveliveHasunosora = flag1; break;
 			case 5: flagSchoolIdolMusical = flag1; break;
 			case 6: flagLoveliveOther = flag1; break;
 		}
@@ -851,7 +851,7 @@ function sortRestart(flagRes) {
 	} else {
 		document.getElementById('ckLoveliveSuperStar').checked = false;
 	}
-	if (flagLoveliveHasunosoraSong == 1) {
+	if (flagLoveliveHasunosora == 1) {
 		document.getElementById('ckLoveliveHasunosora').checked = true;
 	} else {
 		document.getElementById('ckLoveliveHasunosora').checked = false;
@@ -867,7 +867,7 @@ function sortRestart(flagRes) {
 		document.getElementById('ckLoveliveOther').checked = false;
 	}
 
-	initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosoraSong,flagSchoolIdolMusical,flagLoveliveOther);
+	initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagLoveliveOther);
 	document.getElementById("resultField").innerHTML = "";
 	document.getElementById("TWB").innerHTML ="";
 	var str = readCookie('sortRec');
