@@ -42,6 +42,7 @@ var drawOptions;
 // ラブライブ！スーパースター!!:lovelive_superstar.txt
 // ラブライブ！蓮ノ空スクールアイドルクラブ:lovelive_hasunosora.txt
 // スクールアイドルミュージカル:school_idol_musical.txt
+// 幻日のヨハネ:yohane.txt
 // その他:lovelive_other.txt
 //
 //*********************************************************
@@ -61,6 +62,9 @@ var loveliveHasunosoraSong = new Array(
 );
 
 var schoolIdolMusicalSong = new Array(
+);
+
+var yohaneSong = new Array(
 );
 
 var loveliveOtherSong = new Array(
@@ -105,7 +109,7 @@ function getFile(filePath) {
 }
 
 //変数の初期化+++++++++++++++++++++++++++++++++++++++++++++
-function initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagLoveliveOther){
+function initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagYohane,flagLoveliveOther){
 	var n = 0;
 	var mid;
 	var i;
@@ -124,6 +128,7 @@ function initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLovelive
 	if (flagLoveliveSuperStar == 1) loveliveAllSong = loveliveAllSong.concat(loveliveSuperStarSong);
 	if (flagLoveliveHasunosora == 1) loveliveAllSong = loveliveAllSong.concat(loveliveHasunosoraSong);
 	if (flagSchoolIdolMusical == 1) loveliveAllSong = loveliveAllSong.concat(schoolIdolMusicalSong);
+	if (flagYohane == 1) loveliveAllSong = loveliveAllSong.concat(yohaneSong);
 	if (flagLoveliveOther == 1) loveliveAllSong = loveliveAllSong.concat(loveliveOtherSong);
 
 	//ソートすべき配列
@@ -365,6 +370,8 @@ if (loveliveSong.indexOf(str) > -1 || loveliveSong.indexOf(str) > -1){
 	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！蓮ノ空女学院スクールアイドルクラブ";
 } else if (schoolIdolMusicalSong.indexOf(str) > -1) {
 	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "スクールアイドルミュージカル";
+} else if (yohaneSong.indexOf(str) > -1) {
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "幻日のヨハネ";
 } else if (loveliveOtherSong.indexOf(str) > -1) {
 	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "その他(共通楽曲)";
 } else{
@@ -503,6 +510,11 @@ function removeReset(){
 		} else {
 			flagSchoolIdolMusical = 0;
 		}
+		if (document.getElementById('ckYohane').checked) {
+			flagYohane = 1;
+		} else {
+			flagYohane = 0;
+		}
 		if (document.getElementById('ckLoveliveOther').checked) {
 			flagLoveliveOther = 1;
 		} else {
@@ -513,7 +525,7 @@ function removeReset(){
 		document.getElementById("resultField").innerHTML = "";
 		document.getElementById("TWB").innerHTML ="";
 
-		initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagLoveliveOther);
+		initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagYohane,flagLoveliveOther);
 		showImage();
 	}
 //-->
@@ -647,8 +659,11 @@ td.ads{
 				<script type="text/javascript">loveliveSuperStarSong = getFile("lovelive_superstar.txt"); </script><a href="javascript:void(0);" onclick="openWin('lovelive_superstar.txt')"><script type="text/javascript"> document.write(loveliveSuperStarSong.length)</script>曲</a> )
 				<input type="checkbox" id="ckLoveliveHasunosora" name="ckLoveliveHasunosora" >ラブライブ！ラブライブ！蓮ノ空女学院スクールアイドルクラブ(
 				<script type="text/javascript">loveliveHasunosoraSong = getFile("lovelive_hasunosora.txt"); </script><a href="javascript:void(0);" onclick="openWin('lovelive_hasunosora.txt')"><script type="text/javascript"> document.write(loveliveHasunosoraSong.length)</script>曲</a> )
-				<input type="checkbox" id="ckSchoolIdolMusical" name="ckSchoolIdolMusical" >スクールアイドルミュージカル(
+				<input type="checkbox" id="ckSchoolIdolMusical" name="ckSchoolIdolMusical" >ラブライブ！スクールアイドルミュージカル(
 				<script type="text/javascript">schoolIdolMusicalSong = getFile("school_idol_musical.txt"); </script><a href="javascript:void(0);" onclick="openWin('school_idol_musical.txt')"><script type="text/javascript"> document.write(schoolIdolMusicalSong.length)</script>曲</a> )
+				<input type="checkbox" id="ckYohane" name="ckYohane" >幻日のヨハネ(
+				<script type="text/javascript">yohaneSong = getFile("yohane.txt"); </script><a href="javascript:void(0);" onclick="openWin('yohane.txt')"><script type="text/javascript"> document.write(yohaneSong.length)</script>曲</a> )
+
 				<input type="checkbox" id="ckLoveliveOther" name="ckLoveliveOther" >その他(共通楽曲)(
 				<script type="text/javascript">loveliveOtherSong = getFile("lovelive_other.txt"); </script><a href="javascript:void(0);" onclick="openWin('lovelive_other.txt')"><script type="text/javascript"> document.write(loveliveOtherSong.length)</script>曲</a> )
 
@@ -824,7 +839,8 @@ function sortRestart(flagRes) {
 			case 3: flagLoveliveSuperStar = flag1; break;
 			case 4: flagLoveliveHasunosora = flag1; break;
 			case 5: flagSchoolIdolMusical = flag1; break;
-			case 6: flagLoveliveOther = flag1; break;
+			case 6: flagYohane = flag1; break;
+			case 7: flagLoveliveOther = flag1; break;
 		}
 	}
 	
@@ -861,13 +877,20 @@ function sortRestart(flagRes) {
 	} else {
 		document.getElementById('ckSchoolIdolMusical').checked = false;
 	}
+	
+	if (flagYohane == 1) {
+		document.getElementById('ckYohane').checked = true;
+	} else {
+		document.getElementById('ckYohane').checked = false;
+	}
+	
 	if (flagLoveliveOther == 1) {
 		document.getElementById('ckLoveliveOther').checked = true;
 	} else {
 		document.getElementById('ckLoveliveOther').checked = false;
 	}
 
-	initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagLoveliveOther);
+	initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagYohane,flagLoveliveOther);
 	document.getElementById("resultField").innerHTML = "";
 	document.getElementById("TWB").innerHTML ="";
 	var str = readCookie('sortRec');
