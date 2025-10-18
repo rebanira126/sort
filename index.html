@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex"> 
+    <meta name="description" content="2択で好きなラブライブ楽曲を選んでいくことで、自分だけのランキングを生成できます。">
+    <title>ラブライブ楽曲ソート</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="main-body">
+
+    <div class="container">
+
+        <header class="header">
+            <div class="header-content">
+                <h1>ラブライブ楽曲ソート</h1>
+            </div>
+        </header>
+
+        <section class="selection-section">
+            <p class="description-text">2択を選んでいくことで<b>ラブライブ楽曲の私的ランキング</b>を作れます。</p>
+
+            <h2 class="section-title">ソートする楽曲の選択</h2>
+            
+            <div class="checkbox-grid">
+                <div class="checkbox-item"><input type="checkbox" id="ckLovelive" checked="">ラブライブ！ <span id="loveliveCnt"></span> <a href="lovelive.txt" target="_blank">(リスト)</a></div>
+                <div class="checkbox-item"><input type="checkbox" id="ckLoveliveSunshine" value="1">ラブライブ！サンシャイン!! <span id="loveliveSunshineCnt"></span> <a href="lovelive_sunshine.txt" target="_blank">(リスト)</a></div>
+                <div class="checkbox-item"><input type="checkbox" id="ckNijigaku" value="1">ラブライブ！虹ヶ咲学園 <span id="nijigakuCnt"></span> <a href="nijigaku.txt" target="_blank">(リスト)</a></div>
+                <div class="checkbox-item"><input type="checkbox" id="ckLoveliveSuperStar" value="1">ラブライブ！スーパースター!! <span id="loveliveSuperStarCnt"></span> <a href="lovelive_superstar.txt" target="_blank">(リスト)</a></div>
+                
+                <div class="checkbox-item"><input type="checkbox" id="ckLoveliveHasunosora" value="1">ラブライブ！蓮ノ空 <span id="loveliveHasunosoraCnt"></span> <a href="lovelive_hasunosora.txt" target="_blank">(リスト)</a></div>
+                <div class="checkbox-item"><input type="checkbox" id="ckSchoolIdolMusical" value="1">スクールアイドルミュージカル <span id="schoolIdolMusicalCnt"></span> <a href="school_idol_musical.txt" target="_blank">(リスト)</a></div>
+                <div class="checkbox-item"><input type="checkbox" id="ckYohane" value="1">幻日のヨハネ <span id="yohaneCnt"></span> <a href="yohane.txt" target="_blank">(リスト)</a></div>
+                <div class="checkbox-item"><input type="checkbox" id="ckLoveliveOther" value="1">その他(共通楽曲等) <span id="loveliveOtherCnt"></span> <a href="lovelive_other.txt" target="_blank">(リスト)</a></div>
+            </div>
+
+            <div class="start-button-container">
+                <button id="startButton" class="start-button">Start! / 設定変更</button>
+            </div>
+        </section>
+
+        <section id="resultField" class="result-field hidden">
+        </section>
+
+        <section id="mainBattleArea" class="hidden">
+            <div id="remove" class="remove-list"></div>
+
+            <table id="mainTable" class="battle-table">
+                <tr>
+                    <td colspan="3" class="footer-note-top">
+                        途中でやめた場合も、<b>オートセーブで次回は続きから始められます</b>。
+                    </td>
+                </tr>
+                <tr>
+                    <td id="battleNumber" colspan="3" class="battle-number">
+                        &nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td id="leftField" data-choice="-1" rowspan="2" class="choice-button">
+                        &nbsp;
+                    </td>
+                    <td class="middle-button tie-button" data-choice="0">
+                        引き分け
+                    </td>
+                    <td id="rightField" data-choice="1" rowspan="2" class="choice-button">
+                        &nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td class="middle-button undo-button" id="undoButton">
+                        ひとつ前に戻す
+                    </td>
+                </tr>
+            </table>
+        </section>
+
+        <div class="footer-links">
+            <a href="#" id="resetCookieLink" class="reset-cookie-link">ソート結果をリセットする</a>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
