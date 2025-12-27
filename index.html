@@ -525,303 +525,69 @@ function removeReset(){
 	}
 //-->
 </script>
-
-    <style>
-        :root {
-            --primary-color: #ff69b4;
-            --secondary-color: #fce4ec;
-            --accent-color: #ff1493;
-            --text-color: #333;
-            --bg-color: #fff5f8;
-        }
-
-        body {
-            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-        }
-
-        .header {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 15px 0;
-            font-weight: bold;
-            font-size: 1.2rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 0 15px;
-        }
-
-        .intro-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        /* ジャンル選択エリア */
-        .select-area {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 10px;
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            font-size: 0.9rem;
-            padding: 5px;
-        }
-
-        .checkbox-item input {
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
-
-        .checkbox-item a {
-            color: var(--primary-color);
-            text-decoration: none;
-            margin-left: 5px;
-            font-size: 0.8rem;
-        }
-
-        /* ボタンデザイン */
-        .btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 0 #d81b60;
-        }
-
-        .btn:hover {
-            background-color: var(--accent-color);
-            transform: translateY(-2px);
-        }
-
-        .btn:active {
-            transform: translateY(2px);
-            box-shadow: none;
-        }
-
-        /* バトルエリア（ソート中） */
-        #battleArea {
-            display: none;
-        }
-
-        #battleNumber {
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: var(--accent-color);
-        }
-
-        .battle-grid {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 15px;
-            align-items: stretch;
-        }
-
-        @media (max-width: 600px) {
-            .battle-grid {
-                grid-template-columns: 1fr;
-            }
-            .middle-btns {
-                order: 3;
-            }
-        }
-
-        .choice-card {
-            background: white;
-            border: 2px solid var(--primary-color);
-            border-radius: 15px;
-            padding: 30px 15px;
-            text-align: center;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            font-weight: bold;
-            min-height: 120px;
-            transition: all 0.2s;
-        }
-
-        .choice-card:hover {
-            background-color: var(--secondary-color);
-        }
-
-        .middle-btns {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .sub-btn {
-            background: #eee;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            text-align: center;
-        }
-
-        .sub-btn:hover {
-            background: #ddd;
-        }
-
-        /* 除外リスト */
-        .remove-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            justify-content: center;
-            margin-top: 10px;
-        }
-        .remove-tags span {
-            font-size: 0.7rem;
-            background: #ddd;
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-
-        /* 結果テーブル */
-        .result-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .result-table th {
-            background: #333;
-            color: white;
-            padding: 12px;
-            text-align: left;
-        }
-
-        .result-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .rank-cell { width: 50px; font-weight: bold; text-align: center; }
-        .genre-cell { font-size: 0.8rem; color: #666; }
-
-        .footer-note {
-            font-size: 0.8rem;
-            color: #777;
-            text-align: center;
-            margin-top: 30px;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
+<style>
+        :root { --p: #ff69b4; --s: #fce4ec; --a: #ff1493; --t: #333; --bg: #fff5f8; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--t); margin: 0; padding: 0; }
+        .header { background: #333; color: #fff; text-align: center; padding: 15px; font-weight: bold; }
+        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; }
+        .select-area { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; }
+        .checkbox-item { display: flex; align-items: center; font-size: 0.85rem; }
+        .checkbox-item input { margin-right: 8px; }
+        .btn { background: var(--p); color: #fff; border: none; padding: 12px 30px; border-radius: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #d81b60; }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
+        
+        /* バトルエリア */
+        #battleArea { display: none; }
+        .battle-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; margin-top: 15px; }
+        @media (max-width: 600px) { .battle-grid { grid-template-columns: 1fr; } }
+        .choice-card { background: #fff; border: 2px solid var(--p); border-radius: 15px; padding: 20px; text-align: center; cursor: pointer; font-weight: bold; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        .choice-card:hover { background: var(--s); }
+        .middle-btns { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+        .sub-btn { background: #eee; border: 1px solid #ccc; padding: 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; }
+        
+        #battleNumber { font-weight: bold; color: var(--a); text-align: center; margin-bottom: 10px; }
+        .result-table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 20px; }
+        .result-table th { background: #333; color: #fff; padding: 10px; }
+        .result-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .remove-tags { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+        .remove-tags span { font-size: 0.7rem; background: #ddd; padding: 2px 8px; border-radius: 10px; }
     </style>
 </head>
 
 <body>
-
-<div class="header">
-    ラブライブ！ 楽曲ソート
-</div>
+<div class="header">ラブライブ！ 楽曲ソート</div>
 
 <div class="container">
-    <div class="intro-card">
-        <p>2択を選んでいくことで、あなたの<b>ラブライブ！楽曲ランキング</b>を作成します。</p>
-        <p style="font-size: 0.85rem; color: #666;">※オートセーブ機能付き。途中でやめても続きから再開できます。</p>
-    </div>
-
-    <div id="TWB" style="text-align: center;">
+    <div id="TWB" class="card">
+        <p>2択を選んでいくことで、あなたのランキングを作成します。</p>
         <div class="select-area">
-            <div class="checkbox-item">
-                <input type="checkbox" id="ckLovelive"> ラブライブ！
-                <script>loveliveSong = getFile("lovelive.txt");</script>
-                <a href="javascript:void(0);" onclick="openWin('lovelive.txt')">(<script>document.write(loveliveSong.length)</script>曲)</a>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="ckLoveliveSunshine"> ラブライブ！サンシャイン!!
-                <script>loveliveSunshineSong = getFile("lovelive_sunshine.txt");</script>
-                <a href="javascript:void(0);" onclick="openWin('lovelive_sunshine.txt')">(<script>document.write(loveliveSunshineSong.length)</script>曲)</a>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="ckNijigaku"> 虹ヶ咲学園スクールアイドル同好会
-                <script>nijigakuSong = getFile("nijigaku.txt");</script>
-                <a href="javascript:void(0);" onclick="openWin('nijigaku.txt')">(<script>document.write(nijigakuSong.length)</script>曲)</a>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="ckLoveliveSuperStar"> ラブライブ！スーパースター!!
-                <script>loveliveSuperStarSong = getFile("lovelive_superstar.txt");</script>
-                <a href="javascript:void(0);" onclick="openWin('lovelive_superstar.txt')">(<script>document.write(loveliveSuperStarSong.length)</script>曲)</a>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="ckLoveliveHasunosora"> 蓮ノ空女学院スクールアイドルクラブ
-                <script>loveliveHasunosoraSong = getFile("lovelive_hasunosora.txt");</script>
-                <a href="javascript:void(0);" onclick="openWin('lovelive_hasunosora.txt')">(<script>document.write(loveliveHasunosoraSong.length)</script>曲)</a>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="ckSchoolIdolMusical"> スクールアイドルミュージカル
-                <script>schoolIdolMusicalSong = getFile("school_idol_musical.txt");</script>
-                <a href="javascript:void(0);" onclick="openWin('school_idol_musical.txt')">(<script>document.write(schoolIdolMusicalSong.length)</script>曲)</a>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="ckYohane"> 幻日のヨハネ
-                <script>yohaneSong = getFile("yohane.txt");</script>
-                <a href="javascript:void(0);" onclick="openWin('yohane.txt')">(<script>document.write(yohaneSong.length)</script>曲)</a>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="ckLoveliveOther"> その他(共通楽曲)
-                <script>loveliveOtherSong = getFile("lovelive_other.txt");</script>
-                <a href="javascript:void(0);" onclick="openWin('lovelive_other.txt')">(<script>document.write(loveliveOtherSong.length)</script>曲)</a>
-            </div>
+            <div class="checkbox-item"><input type="checkbox" id="ckLovelive"> ラブライブ！<script>loveliveSong=getFile("lovelive.txt");</script><a href="javascript:openWin('lovelive.txt')">(<script>document.write(loveliveSong.length)</script>曲)</a></div>
+            <div class="checkbox-item"><input type="checkbox" id="ckLoveliveSunshine"> サンシャイン!!<script>loveliveSunshineSong=getFile("lovelive_sunshine.txt");</script><a href="javascript:openWin('lovelive_sunshine.txt')">(<script>document.write(loveliveSunshineSong.length)</script>曲)</a></div>
+            <div class="checkbox-item"><input type="checkbox" id="ckNijigaku"> 虹ヶ咲学園<script>nijigakuSong=getFile("nijigaku.txt");</script><a href="javascript:openWin('nijigaku.txt')">(<script>document.write(nijigakuSong.length)</script>曲)</a></div>
+            <div class="checkbox-item"><input type="checkbox" id="ckLoveliveSuperStar"> スーパースター!!<script>loveliveSuperStarSong=getFile("lovelive_superstar.txt");</script><a href="javascript:openWin('lovelive_superstar.txt')">(<script>document.write(loveliveSuperStarSong.length)</script>曲)</a></div>
+            <div class="checkbox-item"><input type="checkbox" id="ckLoveliveHasunosora"> 蓮ノ空<script>loveliveHasunosoraSong=getFile("lovelive_hasunosora.txt");</script><a href="javascript:openWin('lovelive_hasunosora.txt')">(<script>document.write(loveliveHasunosoraSong.length)</script>曲)</a></div>
+            <div class="checkbox-item"><input type="checkbox" id="ckSchoolIdolMusical"> ミュージカル<script>schoolIdolMusicalSong=getFile("school_idol_musical.txt");</script><a href="javascript:openWin('school_idol_musical.txt')">(<script>document.write(schoolIdolMusicalSong.length)</script>曲)</a></div>
+            <div class="checkbox-item"><input type="checkbox" id="ckYohane"> 幻日のヨハネ<script>yohaneSong=getFile("yohane.txt");</script><a href="javascript:openWin('yohane.txt')">(<script>document.write(yohaneSong.length)</script>曲)</a></div>
+            <div class="checkbox-item"><input type="checkbox" id="ckLoveliveOther"> その他<script>loveliveOtherSong=getFile("lovelive_other.txt");</script><a href="javascript:openWin('lovelive_other.txt')">(<script>document.write(loveliveOtherSong.length)</script>曲)</a></div>
         </div>
         <button class="btn" onclick="startCheck('最初からやり直しになりますがよろしいですか？')">ソートを開始する</button>
     </div>
 
-    <div id="battleArea">
+    <div id="battleArea" class="card">
         <div id="battleNumber"></div>
-        <div class="battle-grid">
-            <div id="leftField" class="choice-card" onClick="remSameCnt = 0; if(finishFlag==0)sortList(-1);"></div>
-            
+        <div id="mainTable" class="battle-grid">
+            <div id="leftField" class="choice-card" onclick="remSameCnt=0; if(finishFlag==0)sortList(-1);"></div>
             <div class="middle-btns">
-                <div class="sub-btn" onClick="remSameCnt = 0; if(finishFlag==0)sortList(0);">引き分け</div>
-                <div class="sub-btn" onClick="remSameCnt = 0; sortRestart(-1);">１つ戻す</div>
+                <button class="sub-btn" onclick="remSameCnt=0; if(finishFlag==0)sortList(0);">引き分け</button>
+                <button class="sub-btn" onclick="remSameCnt=0; sortRestart(-1);">１つ戻す</button>
             </div>
-            
-            <div id="rightField" class="choice-card" onClick="remSameCnt = 0; if(finishFlag==0)sortList(1);"></div>
+            <div id="rightField" class="choice-card" onclick="remSameCnt=0; if(finishFlag==0)sortList(1);"></div>
         </div>
         <div id="remove"></div>
     </div>
 
     <div id="resultField"></div>
-
-    <div class="footer-note">
-        LoveLive! Song Sorter
-    </div>
 </div>
 
 <script type="text/javascript">
