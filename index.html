@@ -375,40 +375,48 @@ if (loveliveSong.indexOf(str) > -1 || loveliveSong.indexOf(str) > -1){
 	return str1;
 }
 
+//結果の表示+++++++++++++++++++++++++++++++++++++++++++++++
 function showResult() {
-    var ranking = 1, sameRank = 1;
-    var str = "<div class='result-container'><div class='result-header'>My Ranking Results</div><div class='ranking-list'>";
-    
-    for (var i = 0; i < loveliveAllSong.length; i++) {
-        var songObj = replaceName(loveliveAllSong[lstMember[0][i]]);
-        var rankClass = (ranking <= 3) ? "rank-" + ranking : "";
-        
-        str += "<div class='ranking-item'>";
-        str += "  <div class='rank-badge " + rankClass + "'>" + ranking + "</div>";
-        str += "  <div class='song-info'>";
-        str += "    <span class='song-name'>" + songObj.name + "</span>";
-        if (songObj.genre) {
-            str += "    <span class='genre-label'>" + songObj.genre + "</span>";
-        }
-        str += "  </div>";
-        str += "</div>";
-        
-        if (i < loveliveAllSong.length - 1) {
-            if (equal[lstMember[0][i]] == lstMember[0][i + 1]) {
-                sameRank++;
-            } else {
-                ranking += sameRank;
-                sameRank = 1;
-            }
-        }
-    }
-    str += "</div>";
-    // SNSシェアボタンなどのプレースホルダー
-    str += "<div style='margin-top:20px;'><button class='btn' onclick='location.reload()'>もう一度最初から</button></div></div>";
-    
-    document.getElementById("resultField").innerHTML = str;
-    document.getElementById("battleArea").style.display = "none";
-    removeReset();
+	var ranking = 1;
+	var sameRank = 1;
+	var top5 = 0;
+	var top5Name = "";
+	var str = "";
+	var i;
+	
+	var bArea = document.getElementById("battleArea");
+    var bNum = document.getElementById("battleNumber");
+    if (bArea) bArea.style.display = "none";
+    if (bNum) bNum.style.display = "none";
+	
+	str += "<table style=\"width:350px; font-size:12px; line-height:120%; margin-left:auto; margin-right:auto; border:1px solid #000; border-collapse:collapse\" align=\"center\">";
+	str += "<tr><td style=\"color:#ffffff; background-color:#000; text-align:center;\">順位<\/td><td style=\"color:#ffffff; background-color:#000; text-align:center;\">曲名<\/td><td width=\"180\" style=\"color:#ffffff; background-color:#000; text-align:center;\">作品<\/td><\/tr>";
+
+	for (i=0; i<loveliveAllSong.length; i++) {
+
+		str += "<tr><td style=\"border:1px solid #000; text-align:right; padding-right:5px;\">"+ranking+"<\/td><td style=\"border:1px solid #000; padding-left:5px;\">"+replaceName(loveliveAllSong[lstMember[0][i]]) +"<\/td><\/tr>";
+		
+		if (i<loveliveAllSong.length-1) {
+			if (top5 < 5) {
+				top5Name += ranking + "位"+ "" + loveliveAllSong[lstMember[0][i]] + "" +"\n";
+				top5++;
+			}
+			
+			if (equal[lstMember[0][i]]==lstMember[0][i+1]) {
+				sameRank++;
+			} else {
+				ranking += sameRank;
+				sameRank = 1;
+			}
+		}
+	}
+	str += "<\/table>";
+	
+	document.getElementById("resultField").innerHTML = str;
+	
+	removeReset();
+	
+//	CookieDel();
 }
 
 //比較する２つ要素の表示+++++++++++++++++++++++++++++++++++
@@ -738,96 +746,6 @@ function removeReset(){
             border-top: 1px solid #ddd;
             padding-top: 10px;
         }
-
-		/* --- リザルト画面専用のモダンなスタイル --- */
-		.result-container {
-		    max-width: 600px;
-		    margin: 30px auto;
-		    animation: fadeIn 0.5s ease-out;
-		}
-
-		@keyframes fadeIn {
-		    from { opacity: 0; transform: translateY(10px); }
-		    to { opacity: 1; transform: translateY(0); }
-		}
-
-		.result-header {
-		    text-align: center;
-		    color: var(--t);
-		    margin-bottom: 20px;
-		    font-size: 1.5rem;
-		    font-weight: bold;
-		    border-bottom: 3px solid var(--p);
-		    display: inline-block;
-		    padding-bottom: 5px;
-		}
-
-		.ranking-list {
-		    list-style: none;
-		    padding: 0;
-		    margin: 0;
-		}
-
-		.ranking-item {
-		    background: #fff;
-		    margin-bottom: 10px;
-		    border-radius: 12px;
-		    display: flex;
-		    align-items: center;
-		    padding: 15px;
-		    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-		    transition: transform 0.2s;
-		    border: 1px solid #eee;
-		}
-
-		.ranking-item:hover {
-		    transform: scale(1.02);
-		    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-		}
-
-		/* 順位バッジ */
-		.rank-badge {
-		    width: 40px;
-		    height: 40px;
-		    border-radius: 50%;
-		    background: #eee;
-		    display: flex;
-		    align-items: center;
-		    justify-content: center;
-		    font-weight: bold;
-		    font-size: 1.1rem;
-		    margin-right: 15px;
-		    flex-shrink: 0;
-		}
-
-		/* 上位3位の特別カラー */
-		.rank-1 { background: linear-gradient(135deg, #ffd700, #ffb800); color: #fff; box-shadow: 0 2px 10px rgba(255, 184, 0, 0.4); }
-		.rank-2 { background: linear-gradient(135deg, #c0c0c0, #a8a8a8); color: #fff; }
-		.rank-3 { background: linear-gradient(135deg, #cd7f32, #b87333); color: #fff; }
-
-		.song-info {
-		    flex-grow: 1;
-		    text-align: left;
-		}
-
-		.song-name {
-		    display: block;
-		    font-weight: bold;
-		    font-size: 1.05rem;
-		    color: #222;
-		    margin-bottom: 4px;
-		}
-
-		/* ジャンル名（作品名）のバッジ */
-		.genre-label {
-		    display: inline-block;
-		    font-size: 0.75rem;
-		    background: #f0f0f0;
-		    color: #666;
-		    padding: 2px 10px;
-		    border-radius: 20px;
-		    border: 1px solid #ddd;
-		}
     </style>
 </head>
 
@@ -914,8 +832,6 @@ function removeReset(){
 <script type="text/javascript">
     </script>
 </body>
-
-
 </html>
 
 
