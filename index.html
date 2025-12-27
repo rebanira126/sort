@@ -1001,7 +1001,8 @@ function sortRestart(flagRes) {
 
 	initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagYohane,flagLoveliveOther);
 	document.getElementById("resultField").innerHTML = "";
-	document.getElementById("TWB").innerHTML ="";
+	//document.getElementById("TWB").innerHTML ="";
+	document.getElementById("TWB").style.display = "none";
 	var str = readCookie('sortRec');
 	var remStr = readCookie('remRec');
 	str = decode(str);
