@@ -1014,12 +1014,19 @@ function sortRestart(flagRes) {
 
 //Cookieを消す
 function CookieDel() {
-	var date1 = new Date();
-	date1.setTime(0);
-	document.cookie = "sortFlag=;expires="+date1.toGMTString();
-	document.cookie = "sortRec=;expires="+date1.toGMTString();
-	document.cookie = "remRec=;expires="+date1.toGMTString();
-	document.cookie = "remCnt=;expires="+date1.toGMTString();
+    // 削除したいCookieの名前リスト
+    var cookies = ['sortFlag', 'sortRec', 'remRec', 'remCnt', 'Ver'];
+    
+    // 過去の日付を設定（1970年1月1日）
+    var expireDate = "expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    
+    for (var i = 0; i < cookies.length; i++) {
+        // 各Cookieを過去の期限で上書きして削除
+        // path=/ を指定することで、階層によらず確実に削除します
+        document.cookie = cookies[i] + "=; " + expireDate + "; path=/";
+    }
+    
+    console.log("Cookies have been cleared.");
 }
 
 // 全ての文字列 org を dest に置き換える  
