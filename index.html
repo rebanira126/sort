@@ -3,86 +3,1022 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex"> 
+    <title>ラブライブ！楽曲ソート</title>
     <meta name="description" content="2択で好きなラブライブ楽曲を選んでいくことで、自分だけのランキングを生成できます。">
-    <title>ラブライブ楽曲ソート</title>
 
-    <link rel="stylesheet" href="style.css">
+    <script src="compression.js" type="text/javascript"></script>
+    <script src="cookie.js" type="text/javascript"></script>
+    <script type="text/javascript">
+<!--
+var Ver = '4';
+var flagLovelive = 0;
+var flagLoveliveSunshine = 0;
+var flagNijigaku = 0;
+var flagLoveliveSuperStar = 0;
+var flagLoveliveHasunosora = 0;
+var flagSchoolIdolMusical = 0;
+var flagLoveliveOther = 0;
+var flagRes = 0;
+var cookieRec = "";
+var remCookieRec = "";
+var remResFlag = 0;
+var remSameCnt = 0;
+var loadcheck = 0;
+var lockUpdateDOM = false;
+var options;
+var drawOptions;
+
+//*********************************************************
+// 
+// 評価する曲名のリスト
+// ラブライブ！:lovelive.txt
+// ラブライブ！サンシャイン!!:lovelive_sunshine.txt
+// ラブライブ！虹ヶ咲学園スクールアイドル同好会:nijigaku.txt
+// ラブライブ！スーパースター!!:lovelive_superstar.txt
+// ラブライブ！蓮ノ空スクールアイドルクラブ:lovelive_hasunosora.txt
+// スクールアイドルミュージカル:school_idol_musical.txt
+// 幻日のヨハネ:yohane.txt
+// その他:lovelive_other.txt
+//
+//*********************************************************
+var loveliveSong = new Array(
+);
+
+var loveliveSunshineSong = new Array(
+);
+
+var nijigakuSong = new Array(
+);
+
+var loveliveSuperStarSong = new Array(
+);
+
+var loveliveHasunosoraSong = new Array(
+);
+
+var schoolIdolMusicalSong = new Array(
+);
+
+var yohaneSong = new Array(
+);
+
+var loveliveOtherSong = new Array(
+);
+//*********************************************************
+
+var lstMember = new Array();
+var parent = new Array();
+var equal = new Array();
+var rec = new Array();
+var cmp1,cmp2;
+var head1,head2;
+var nrec;
+
+var numQuestion;
+var totalSize;
+var finishSize;
+var finishFlag;
+
+var remMember = new Array();
+
+function getFile(filePath) {
+	var txtData = new Array();
+	var txtData2 = new Array();
+	var j = 0;
+	var filedata = new XMLHttpRequest();	
+	filedata.open("GET", filePath, false);
+	filedata.send(null);
+
+	 //改行コードLF
+	var LF = String.fromCharCode(10);
+	txtData2 =filedata.responseText.split(LF);
+	for (i=0; i<txtData2.length; i++) {
+		if(txtData2[i] != ""){
+		txtData[j] = txtData2[i];
+		j++;
+		}
+	}
+	
+	return txtData;
+	
+}
+
+//変数の初期化+++++++++++++++++++++++++++++++++++++++++++++
+function initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagYohane,flagLoveliveOther){
+	var n = 0;
+	var mid;
+	var i;
+
+	lstMember = new Array();
+	parent = new Array();
+	equal = new Array();
+	rec = new Array();
+	remMember = new Array();
+	loveliveAllSong = new Array();
+	
+	//【追加コード】
+	if (flagLovelive == 1) loveliveAllSong = loveliveAllSong.concat(loveliveSong);
+	if (flagLoveliveSunshine == 1) loveliveAllSong = loveliveAllSong.concat(loveliveSunshineSong);
+	if (flagNijigaku == 1) loveliveAllSong = loveliveAllSong.concat(nijigakuSong);
+	if (flagLoveliveSuperStar == 1) loveliveAllSong = loveliveAllSong.concat(loveliveSuperStarSong);
+	if (flagLoveliveHasunosora == 1) loveliveAllSong = loveliveAllSong.concat(loveliveHasunosoraSong);
+	if (flagSchoolIdolMusical == 1) loveliveAllSong = loveliveAllSong.concat(schoolIdolMusicalSong);
+	if (flagYohane == 1) loveliveAllSong = loveliveAllSong.concat(yohaneSong);
+	if (flagLoveliveOther == 1) loveliveAllSong = loveliveAllSong.concat(loveliveOtherSong);
+
+	//ソートすべき配列
+	lstMember[n] = new Array();
+	for (i=0; i<loveliveAllSong.length; i++) {
+		lstMember[n][i] = i;
+	}
+	parent[n] = -1;
+	totalSize = 0;
+	n++;
+
+	for (i=0; i<lstMember.length; i++) {
+		//要素数が２以上なら２分割し、
+		//分割された配列をlstMemberの最後に加える
+		if(lstMember[i].length>=2) {
+			mid = Math.ceil(lstMember[i].length/2);
+			lstMember[n] = new Array();
+			lstMember[n] = lstMember[i].slice(0,mid);
+			totalSize += lstMember[n].length;
+			parent[n] = i;
+			n++;
+			lstMember[n] = new Array();
+			lstMember[n] = lstMember[i].slice(mid,lstMember[i].length);
+			totalSize += lstMember[n].length;
+			parent[n] = i;
+			n++;
+		}
+	}
+
+	//保存用配列
+	for (i=0; i<loveliveAllSong.length; i++) {
+		rec[i] = 0;
+	}
+	nrec = 0;
+
+	//引き分けの結果を保存するリスト
+	//キー：リンク始点の値
+	// 値 ：リンク終点の値
+	for (i=0; i<=loveliveAllSong.length; i++) {
+		equal[i] = -1;
+	}
+
+	cmp1 = lstMember.length-2;
+	cmp2 = lstMember.length-1;
+	head1 = 0;
+	head2 = 0;
+	numQuestion = 1;
+	finishSize = 0;
+	finishFlag = 0;
+}
+
+
+//リストのソート+++++++++++++++++++++++++++++++++++++++++++
+//flag：比較結果
+//  -1：左を選択
+//   0：引き分け
+//   1：右を選択
+function sortList(flag){
+	var i;
+	var str;
+	
+	var chara1 = loveliveAllSong[lstMember[cmp1][head1]];
+	var chara2 = loveliveAllSong[lstMember[cmp2][head2]];
+	var chara99 = chara1 + "と" + chara2;
+	
+	// 除外操作
+	if (flag == 2) {
+		if (removeCheck(chara1) == true) {
+			remMember.push(chara1);
+			flag = 1;
+			remCookieRec += "R";
+		} else {
+			return;
+		}
+	} else if (flag == 99) {
+		if (removeCheck(chara99) == true) {
+			remMember.push(chara1);
+			remMember.push(chara2);
+			flag = 0;
+			remCookieRec += "R";
+		} else {
+			return;
+		}
+	} else if (flag == -2) {
+		if (removeCheck(chara2) == true) {
+			remMember.push(chara2);
+			flag = -1;
+			remCookieRec += "R";
+		} else {
+			return;
+		}
+	} else{
+		remCookieRec += "L";
+	}
+	
+
+	//ソート情報の記録
+	var sortrecValue;
+	if (flag == 1) {
+		sortrecValue = "R";
+	} else if (flag == 0) {
+		sortrecValue = "C";
+	} else if (flag == -1) {
+		sortrecValue = "L";
+	}
+	cookieRec += sortrecValue;
+
+	//recに保存
+	if (flag<0) {
+		rec[nrec] = lstMember[cmp1][head1];
+		head1++;
+		nrec++;
+		finishSize++;
+		while (equal[rec[nrec-1]]!=-1) {
+			rec[nrec] = lstMember[cmp1][head1];
+			head1++;
+			nrec++;
+			finishSize++;
+		}
+	}
+	else if (flag>0) {
+		rec[nrec] = lstMember[cmp2][head2];
+		head2++;
+		nrec++;
+		finishSize++;
+		while (equal[rec[nrec-1]]!=-1) {
+			rec[nrec] = lstMember[cmp2][head2];
+			head2++;
+			nrec++;
+			finishSize++;
+		}
+	}
+	else {
+		rec[nrec] = lstMember[cmp1][head1];
+		head1++;
+		nrec++;
+		finishSize++;
+		while (equal[rec[nrec-1]]!=-1) {
+			rec[nrec] = lstMember[cmp1][head1];
+			head1++;
+			nrec++;
+			finishSize++;
+		}
+		equal[rec[nrec-1]] = lstMember[cmp2][head2];
+		rec[nrec] = lstMember[cmp2][head2];
+		head2++;
+		nrec++;
+		finishSize++;
+		while (equal[rec[nrec-1]]!=-1) {
+			rec[nrec] = lstMember[cmp2][head2];
+			head2++;
+			nrec++;
+			finishSize++;
+		}
+	}
+
+	//片方のリストを走査し終えた後の処理
+	if (head1<lstMember[cmp1].length && head2==lstMember[cmp2].length) {
+		//リストcmp2が走査済 - リストcmp1の残りをコピー
+		while (head1<lstMember[cmp1].length){
+			rec[nrec] = lstMember[cmp1][head1];
+			head1++;
+			nrec++;
+			finishSize++;
+		}
+	}
+	else if (head1==lstMember[cmp1].length && head2<lstMember[cmp2].length) {
+		//リストcmp1が走査済 - リストcmp2の残りをコピー
+		while (head2<lstMember[cmp2].length){
+			rec[nrec] = lstMember[cmp2][head2];
+			head2++;
+			nrec++;
+			finishSize++;
+		}
+	}
+
+	//両方のリストの最後に到達した場合は
+	//親リストを更新する
+	if (head1==lstMember[cmp1].length && head2==lstMember[cmp2].length) {
+		for (i=0; i<lstMember[cmp1].length+lstMember[cmp2].length; i++) {
+			lstMember[parent[cmp1]][i] = rec[i];
+		}
+		lstMember.pop();
+		lstMember.pop();
+		cmp1 = cmp1-2;
+		cmp2 = cmp2-2;
+		head1 = 0;
+		head2 = 0;
+
+		//新しい比較を行う前にrecを初期化
+		if (head1==0 && head2==0) {
+			for (i=0; i<loveliveAllSong.length; i++) {
+				rec[i] = 0;
+			}
+			nrec = 0;
+		}
+	}
+	if (cmp1<0) {
+		str = "Sort No."+(numQuestion-1)+"<br>"+Math.floor(finishSize*100/totalSize)+"% sorted.";
+		document.getElementById("battleNumber").innerHTML = str;
+
+		showResult();
+		finishFlag = 1;
+	}
+	else {
+		showImage();
+	}
+	
+	sortBreak();
+}
+
+//除外の確認
+function removeCheck(str) {
+	var str2 = str + "をソートから除外します。よろしいですか？";
+	if (remResFlag == 0) {
+		if(window.confirm(str2)){
+			return true;
+		} else {
+			return false;
+		}
+	} else {
+		return true;
+	}
+}
+
+// リザルト画面にジャンル表記
+function replaceName(str) {
+	var str1;
+
+if (loveliveSong.indexOf(str) > -1 || loveliveSong.indexOf(str) > -1){
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！";
+} else if (loveliveSunshineSong.indexOf(str) > -1) {
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！サンシャイン!!";
+} else if (nijigakuSong.indexOf(str) > -1) {
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！虹ヶ咲学園スクールアイドル同好会";
+} else if (loveliveSuperStarSong.indexOf(str) > -1) {
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！スーパースター!!";
+} else if (loveliveHasunosoraSong.indexOf(str) > -1) {
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "ラブライブ！蓮ノ空女学院スクールアイドルクラブ";
+} else if (schoolIdolMusicalSong.indexOf(str) > -1) {
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "スクールアイドルミュージカル";
+} else if (yohaneSong.indexOf(str) > -1) {
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "幻日のヨハネ";
+} else if (loveliveOtherSong.indexOf(str) > -1) {
+	str1 = str + "</td><td style=\"border:1px solid #000; padding-left:5px;\">" + "その他(共通楽曲)";
+} else{
+	str1 = str;
+}
+	return str1;
+}
+
+//結果の表示+++++++++++++++++++++++++++++++++++++++++++++++
+function showResult() {
+	var ranking = 1;
+	var sameRank = 1;
+	var top5 = 0;
+	var top5Name = "";
+	var str = "";
+	var i;
+	
+	str += "<table style=\"width:350px; font-size:12px; line-height:120%; margin-left:auto; margin-right:auto; border:1px solid #000; border-collapse:collapse\" align=\"center\">";
+	str += "<tr><td style=\"color:#ffffff; background-color:#000; text-align:center;\">順位<\/td><td style=\"color:#ffffff; background-color:#000; text-align:center;\">曲名<\/td><td width=\"180\" style=\"color:#ffffff; background-color:#000; text-align:center;\">作品<\/td><\/tr>";
+
+	for (i=0; i<loveliveAllSong.length; i++) {
+
+		str += "<tr><td style=\"border:1px solid #000; text-align:right; padding-right:5px;\">"+ranking+"<\/td><td style=\"border:1px solid #000; padding-left:5px;\">"+replaceName(loveliveAllSong[lstMember[0][i]]) +"<\/td><\/tr>";
+		
+		if (i<loveliveAllSong.length-1) {
+			if (top5 < 5) {
+				top5Name += ranking + "位"+ "" + loveliveAllSong[lstMember[0][i]] + "" +"\n";
+				top5++;
+			}
+			
+			if (equal[lstMember[0][i]]==lstMember[0][i+1]) {
+				sameRank++;
+			} else {
+				ranking += sameRank;
+				sameRank = 1;
+			}
+		}
+	}
+	str += "<\/table>";
+	
+	document.getElementById("resultField").innerHTML = str;
+	
+	removeReset();
+	
+//	CookieDel();
+}
+
+//比較する２つ要素の表示+++++++++++++++++++++++++++++++++++
+function showImage() {
+	// 小手先修正(0％に戻る時にnumQuestionが2になってたやつ)
+	if ( finishSize == 0 ) {
+		numQuestion = 1;
+	}
+	var str0 = "Sort No."+numQuestion+"<br>"+Math.floor(finishSize*100/totalSize)+"% sorted.";
+	
+	if (lockUpdateDOM == false) {
+		var str1 = loveliveAllSong[lstMember[cmp1][head1]];
+		var str2 = loveliveAllSong[lstMember[cmp2][head2]];
+		
+		//var str1B = loveliveAllSong[lstMember[cmp1][head1]] + "を選び、" + loveliveAllSong[lstMember[cmp2][head2]] + "をソートから除外";
+		//var str2B = loveliveAllSong[lstMember[cmp2][head2]] + "を選び、" + loveliveAllSong[lstMember[cmp1][head1]] + "をソートから除外";
+		
+		document.getElementById("battleNumber").innerHTML = str0;
+		document.getElementById("leftField").innerHTML = str1;
+		document.getElementById("rightField").innerHTML = str2;
+		
+		//document.getElementById("leftField2").innerHTML = str1B;
+		//document.getElementById("rightField2").innerHTML = str2B;
+
+	}
+
+	// 【追加コード】再走査
+	if (remMember.indexOf(loveliveAllSong[lstMember[cmp1][head1]]) > -1 && remMember.indexOf(loveliveAllSong[lstMember[cmp2][head2]]) > -1) {
+		remSameCnt++;
+		sortList(0);
+	} else if (remMember.indexOf(loveliveAllSong[lstMember[cmp1][head1]]) > -1) {
+		remSameCnt++;
+		sortList(1);
+	} else if (remMember.indexOf(loveliveAllSong[lstMember[cmp2][head2]]) > -1) {
+		remSameCnt++;
+		sortList(-1);
+	} else {
+		numQuestion++;
+	}
+
+	if (lockUpdateDOM == false) {
+		var removeTable = "";
+
+		if (remMember.length > 0) {
+			removeTable = "除外リスト<br><table id='removeTable'>";
+			for (var i = 0; i < remMember.length; i++){
+				if (i % 4 == 0) removeTable += (i == 0) ? "<tr>" : "</tr><tr>";
+				removeTable += "<td style='border:1px solid #000000;'>" + remMember[i] + "</td>";
+			}
+			removeTable += "</tr></table>";
+		}
+		document.getElementById("remove").innerHTML = removeTable;
+	}
+}
+
+// 除外リストのリセット++++++++++++++++++++++++++++++++++++
+function removeReset(){
+	remMember = new Array();
+	document.getElementById("remove").innerHTML = "";
+}
+
+// ソート開始++++++++++++++++++++++++++++++++++++
+	function sortStart() {
+		if (document.getElementById('ckLovelive').checked) {
+			flagLovelive = 1;
+		} else {
+			flagLovelive = 0;		
+		}
+		if (document.getElementById('ckLoveliveSunshine').checked) {
+			flagLoveliveSunshine = 1;
+		} else {
+			flagLoveliveSunshine = 0;
+		}
+		if (document.getElementById('ckNijigaku').checked) {
+			flagNijigaku = 1;
+		} else {
+			flagNijigaku = 0;
+		}
+		if (document.getElementById('ckLoveliveSuperStar').checked) {
+			flagLoveliveSuperStar = 1;
+		} else {
+			flagLoveliveSuperStar = 0;
+		}
+		if (document.getElementById('ckLoveliveHasunosora').checked) {
+			flagLoveliveHasunosora = 1;
+		} else {
+			flagLoveliveHasunosora = 0;
+		}
+		if (document.getElementById('ckSchoolIdolMusical').checked) {
+			flagSchoolIdolMusical = 1;
+		} else {
+			flagSchoolIdolMusical = 0;
+		}
+		if (document.getElementById('ckYohane').checked) {
+			flagYohane = 1;
+		} else {
+			flagYohane = 0;
+		}
+		if (document.getElementById('ckLoveliveOther').checked) {
+			flagLoveliveOther = 1;
+		} else {
+			flagLoveliveOther = 0;
+		}
+		
+		
+		document.getElementById("resultField").innerHTML = "";
+		document.getElementById("TWB").innerHTML ="";
+
+		initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagYohane,flagLoveliveOther);
+		showImage();
+	}
+//-->
+</script>
+
+    <style>
+        :root {
+            --primary-color: #ff69b4;
+            --secondary-color: #fce4ec;
+            --accent-color: #ff1493;
+            --text-color: #333;
+            --bg-color: #fff5f8;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .intro-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* ジャンル選択エリア */
+        .select-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            padding: 5px;
+        }
+
+        .checkbox-item input {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .checkbox-item a {
+            color: var(--primary-color);
+            text-decoration: none;
+            margin-left: 5px;
+            font-size: 0.8rem;
+        }
+
+        /* ボタンデザイン */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 0 #d81b60;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        /* バトルエリア（ソート中） */
+        #battleArea {
+            display: none;
+        }
+
+        #battleNumber {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+
+        .battle-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 15px;
+            align-items: stretch;
+        }
+
+        @media (max-width: 600px) {
+            .battle-grid {
+                grid-template-columns: 1fr;
+            }
+            .middle-btns {
+                order: 3;
+            }
+        }
+
+        .choice-card {
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 15px;
+            padding: 30px 15px;
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            min-height: 120px;
+            transition: all 0.2s;
+        }
+
+        .choice-card:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .middle-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .sub-btn {
+            background: #eee;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .sub-btn:hover {
+            background: #ddd;
+        }
+
+        /* 除外リスト */
+        .remove-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .remove-tags span {
+            font-size: 0.7rem;
+            background: #ddd;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* 結果テーブル */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .result-table th {
+            background: #333;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .result-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .rank-cell { width: 50px; font-weight: bold; text-align: center; }
+        .genre-cell { font-size: 0.8rem; color: #666; }
+
+        .footer-note {
+            font-size: 0.8rem;
+            color: #777;
+            text-align: center;
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+    </style>
 </head>
-<body class="main-body">
 
-    <div class="container">
+<body>
 
-        <header class="header">
-            <div class="header-content">
-                <h1>ラブライブ楽曲ソート</h1>
-            </div>
-        </header>
+<div class="header">
+    ラブライブ！ 楽曲ソート
+</div>
 
-        <section class="selection-section">
-            <p class="description-text">2択を選んでいくことで<b>ラブライブ楽曲の私的ランキング</b>を作れます。</p>
-
-            <h2 class="section-title">ソートする楽曲の選択</h2>
-            
-            <div class="checkbox-grid">
-                <div class="checkbox-item"><input type="checkbox" id="ckLovelive" checked="">ラブライブ！ <span id="loveliveCnt"></span> <a href="lovelive.txt" target="_blank">(リスト)</a></div>
-                <div class="checkbox-item"><input type="checkbox" id="ckLoveliveSunshine" value="1">ラブライブ！サンシャイン!! <span id="loveliveSunshineCnt"></span> <a href="lovelive_sunshine.txt" target="_blank">(リスト)</a></div>
-                <div class="checkbox-item"><input type="checkbox" id="ckNijigaku" value="1">ラブライブ！虹ヶ咲学園 <span id="nijigakuCnt"></span> <a href="nijigaku.txt" target="_blank">(リスト)</a></div>
-                <div class="checkbox-item"><input type="checkbox" id="ckLoveliveSuperStar" value="1">ラブライブ！スーパースター!! <span id="loveliveSuperStarCnt"></span> <a href="lovelive_superstar.txt" target="_blank">(リスト)</a></div>
-                
-                <div class="checkbox-item"><input type="checkbox" id="ckLoveliveHasunosora" value="1">ラブライブ！蓮ノ空 <span id="loveliveHasunosoraCnt"></span> <a href="lovelive_hasunosora.txt" target="_blank">(リスト)</a></div>
-                <div class="checkbox-item"><input type="checkbox" id="ckSchoolIdolMusical" value="1">スクールアイドルミュージカル <span id="schoolIdolMusicalCnt"></span> <a href="school_idol_musical.txt" target="_blank">(リスト)</a></div>
-                <div class="checkbox-item"><input type="checkbox" id="ckYohane" value="1">幻日のヨハネ <span id="yohaneCnt"></span> <a href="yohane.txt" target="_blank">(リスト)</a></div>
-                <div class="checkbox-item"><input type="checkbox" id="ckLoveliveOther" value="1">その他(共通楽曲等) <span id="loveliveOtherCnt"></span> <a href="lovelive_other.txt" target="_blank">(リスト)</a></div>
-            </div>
-
-            <div class="start-button-container">
-                <button id="startButton" class="start-button">Start! / 設定変更</button>
-            </div>
-        </section>
-
-        <section id="resultField" class="result-field hidden">
-        </section>
-
-        <section id="mainBattleArea" class="hidden">
-            <div id="remove" class="remove-list"></div>
-
-            <table id="mainTable" class="battle-table">
-                <tr>
-                    <td colspan="3" class="footer-note-top">
-                        途中でやめた場合も、<b>オートセーブで次回は続きから始められます</b>。
-                    </td>
-                </tr>
-                <tr>
-                    <td id="battleNumber" colspan="3" class="battle-number">
-                        &nbsp;
-                    </td>
-                </tr>
-                <tr>
-                    <td id="leftField" data-choice="-1" rowspan="2" class="choice-button">
-                        &nbsp;
-                    </td>
-                    <td class="middle-button tie-button" data-choice="0">
-                        引き分け
-                    </td>
-                    <td id="rightField" data-choice="1" rowspan="2" class="choice-button">
-                        &nbsp;
-                    </td>
-                </tr>
-                <tr>
-                    <td class="middle-button undo-button" id="undoButton">
-                        ひとつ前に戻す
-                    </td>
-                </tr>
-            </table>
-        </section>
-
-        <div class="footer-links">
-            <a href="#" id="resetCookieLink" class="reset-cookie-link">ソート結果をリセットする</a>
-        </div>
-
+<div class="container">
+    <div class="intro-card">
+        <p>2択を選んでいくことで、あなたの<b>ラブライブ！楽曲ランキング</b>を作成します。</p>
+        <p style="font-size: 0.85rem; color: #666;">※オートセーブ機能付き。途中でやめても続きから再開できます。</p>
     </div>
 
-    <script src="script.js"></script>
+    <div id="TWB" style="text-align: center;">
+        <div class="select-area">
+            <div class="checkbox-item">
+                <input type="checkbox" id="ckLovelive"> ラブライブ！
+                <script>loveliveSong = getFile("lovelive.txt");</script>
+                <a href="javascript:void(0);" onclick="openWin('lovelive.txt')">(<script>document.write(loveliveSong.length)</script>曲)</a>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="ckLoveliveSunshine"> ラブライブ！サンシャイン!!
+                <script>loveliveSunshineSong = getFile("lovelive_sunshine.txt");</script>
+                <a href="javascript:void(0);" onclick="openWin('lovelive_sunshine.txt')">(<script>document.write(loveliveSunshineSong.length)</script>曲)</a>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="ckNijigaku"> 虹ヶ咲学園スクールアイドル同好会
+                <script>nijigakuSong = getFile("nijigaku.txt");</script>
+                <a href="javascript:void(0);" onclick="openWin('nijigaku.txt')">(<script>document.write(nijigakuSong.length)</script>曲)</a>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="ckLoveliveSuperStar"> ラブライブ！スーパースター!!
+                <script>loveliveSuperStarSong = getFile("lovelive_superstar.txt");</script>
+                <a href="javascript:void(0);" onclick="openWin('lovelive_superstar.txt')">(<script>document.write(loveliveSuperStarSong.length)</script>曲)</a>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="ckLoveliveHasunosora"> 蓮ノ空女学院スクールアイドルクラブ
+                <script>loveliveHasunosoraSong = getFile("lovelive_hasunosora.txt");</script>
+                <a href="javascript:void(0);" onclick="openWin('lovelive_hasunosora.txt')">(<script>document.write(loveliveHasunosoraSong.length)</script>曲)</a>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="ckSchoolIdolMusical"> スクールアイドルミュージカル
+                <script>schoolIdolMusicalSong = getFile("school_idol_musical.txt");</script>
+                <a href="javascript:void(0);" onclick="openWin('school_idol_musical.txt')">(<script>document.write(schoolIdolMusicalSong.length)</script>曲)</a>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="ckYohane"> 幻日のヨハネ
+                <script>yohaneSong = getFile("yohane.txt");</script>
+                <a href="javascript:void(0);" onclick="openWin('yohane.txt')">(<script>document.write(yohaneSong.length)</script>曲)</a>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="ckLoveliveOther"> その他(共通楽曲)
+                <script>loveliveOtherSong = getFile("lovelive_other.txt");</script>
+                <a href="javascript:void(0);" onclick="openWin('lovelive_other.txt')">(<script>document.write(loveliveOtherSong.length)</script>曲)</a>
+            </div>
+        </div>
+        <button class="btn" onclick="startCheck('最初からやり直しになりますがよろしいですか？')">ソートを開始する</button>
+    </div>
+
+    <div id="battleArea">
+        <div id="battleNumber"></div>
+        <div class="battle-grid">
+            <div id="leftField" class="choice-card" onClick="remSameCnt = 0; if(finishFlag==0)sortList(-1);"></div>
+            
+            <div class="middle-btns">
+                <div class="sub-btn" onClick="remSameCnt = 0; if(finishFlag==0)sortList(0);">引き分け</div>
+                <div class="sub-btn" onClick="remSameCnt = 0; sortRestart(-1);">１つ戻す</div>
+            </div>
+            
+            <div id="rightField" class="choice-card" onClick="remSameCnt = 0; if(finishFlag==0)sortList(1);"></div>
+        </div>
+        <div id="remove"></div>
+    </div>
+
+    <div id="resultField"></div>
+
+    <div class="footer-note">
+        LoveLive! Song Sorter
+    </div>
+</div>
+
+<script type="text/javascript">
+    </script>
 </body>
 </html>
+
+
+<script type="text/javascript">
+<!--
+restartCheck('中断しているデータがあるようです。復元しますか？');
+
+function startCheck(str){
+	//Cookieの確認とソート状態の復元
+	if (readCookie('sortFlag') != "" && readCookie('sortRec') != "") {
+		if (Ver == readCookie('Ver')) {
+			if(window.confirm(str)){
+				CookieDel();
+				removeReset();
+				remSameCnt = 0;
+				cookieRec = ""
+				remCookieRec = ""
+				remCnt=0;
+				sortStart();
+			} 
+		}
+	} else {
+		CookieDel();
+		removeReset();
+		remSameCnt = 0;
+		cookieRec = ""
+		remCookieRec = ""
+		remCnt=0;
+		sortStart();
+	}
+}
+
+function restartCheck(str){
+	//Cookieの確認とソート状態の復元
+	if (readCookie('sortFlag') != "" && readCookie('sortRec') != "") {
+		if (Ver == readCookie('Ver')) {
+			if(window.confirm(str)){
+			// 引数追加 20150331 J
+				sortRestart(0);
+			} else {
+				CookieDel();
+			}
+		} else {
+			alert('楽曲データが更新されたので中断データを正しく復元できませんでした。');
+			CookieDel();
+		}
+	}
+}
+
+
+// 中断する
+function sortBreak() {
+	var flag = "" + flagLovelive + "" + flagLoveliveSunshine + "" + flagNijigaku + "" + flagLoveliveSuperStar + "" + flagLoveliveHasunosora + "" + flagSchoolIdolMusical + "" + flagYohane + "" + flagLoveliveOther;
+	writeCookie('sortFlag', flag, 365);
+	writeCookie('sortRec', encode(cookieRec), 365);
+	writeCookie('remRec', encode(remCookieRec), 365);
+	writeCookie('remCnt', remSameCnt, 365);
+	writeCookie('Ver',Ver, 365);
+}
+
+// 中断からの再生・アンドゥ
+function sortRestart(flagRes) {
+	var flag = readCookie('sortFlag');
+	var flag1;
+	removeReset();
+	remSameCnt = 0;
+	remResFlag = 1;
+	for (var i = 0; i < flag.length; i++) {
+		flag1 = flag.substring(i, i+1);
+		switch (i) {
+			case 0: flagLovelive = flag1; break;
+			case 1: flagLoveliveSunshine = flag1; break;
+			case 2: flagNijigaku = flag1; break;
+			case 3: flagLoveliveSuperStar = flag1; break;
+			case 4: flagLoveliveHasunosora = flag1; break;
+			case 5: flagSchoolIdolMusical = flag1; break;
+			case 6: flagYohane = flag1; break;
+			case 7: flagLoveliveOther = flag1; break;
+		}
+	}
+	
+	if (flagLovelive == 1) {
+		document.getElementById('ckLovelive').checked = true;
+	} else {
+		document.getElementById('ckLovelive').checked = false;
+	}
+
+	if (flagLoveliveSunshine == 1) {
+		document.getElementById('ckLoveliveSunshine').checked = true;
+	} else {
+		document.getElementById('ckLoveliveSunshine').checked = false;
+	}
+
+	if (flagNijigaku == 1) {
+		document.getElementById('ckNijigaku').checked = true;
+	} else {
+		document.getElementById('ckNijigaku').checked = false;
+	}
+	
+	if (flagLoveliveSuperStar == 1) {
+		document.getElementById('ckLoveliveSuperStar').checked = true;
+	} else {
+		document.getElementById('ckLoveliveSuperStar').checked = false;
+	}
+	if (flagLoveliveHasunosora == 1) {
+		document.getElementById('ckLoveliveHasunosora').checked = true;
+	} else {
+		document.getElementById('ckLoveliveHasunosora').checked = false;
+	}
+	if (flagSchoolIdolMusical == 1) {
+		document.getElementById('ckSchoolIdolMusical').checked = true;
+	} else {
+		document.getElementById('ckSchoolIdolMusical').checked = false;
+	}
+	
+	if (flagYohane == 1) {
+		document.getElementById('ckYohane').checked = true;
+	} else {
+		document.getElementById('ckYohane').checked = false;
+	}
+	
+	if (flagLoveliveOther == 1) {
+		document.getElementById('ckLoveliveOther').checked = true;
+	} else {
+		document.getElementById('ckLoveliveOther').checked = false;
+	}
+
+	initList(flagLovelive, flagLoveliveSunshine, flagNijigaku, flagLoveliveSuperStar,flagLoveliveHasunosora,flagSchoolIdolMusical,flagYohane,flagLoveliveOther);
+	document.getElementById("resultField").innerHTML = "";
+	document.getElementById("TWB").innerHTML ="";
+	var str = readCookie('sortRec');
+	var remStr = readCookie('remRec');
+	str = decode(str);
+	remStr = decode(remStr);
+	var str1;
+	var remStr1;
+	var resLenCnt;
+
+	cookieRec = ""
+	remCookieRec = ""
+	resLenCnt = str.length;
+	remSameCnt = readCookie('remCnt');
+	if (flagRes == -1) {
+		resLenCnt = resLenCnt - remSameCnt - 1;
+	}
+	CookieDel();
+	// このsortList()の中でコールされるDOM操作が重いので、一旦ロック
+	lockUpdateDOM = true;
+	for (var i = 0; i < resLenCnt; i++) {
+		str1 = str.substring(i, i+1);
+		remStr1 = remStr.substring(i, i+1);
+		remSameCnt = 0;
+		if (str1=="L") {
+			if (remStr1=="R"){
+				sortList(-2);
+			} else {
+				sortList(-1);
+			}
+		} else if (str1=="R") {
+			if (remStr1=="R"){
+				sortList(2);
+			} else{
+				sortList(1);
+			}
+		} else if (str1=="C"){
+			if (remStr1=="R"){
+				sortList(99);
+			} else{
+				sortList(0);
+			}
+		}
+		i = i + remSameCnt;
+	}
+	// ロック解除して、描画の為にshowImage()コール
+	lockUpdateDOM = false;
+	remResFlag = 0;
+	showImage();
+}
+
+//Cookieを消す
+function CookieDel() {
+	var date1 = new Date();
+	date1.setTime(0);
+	document.cookie = "sortFlag=;expires="+date1.toGMTString();
+	document.cookie = "sortRec=;expires="+date1.toGMTString();
+	document.cookie = "remRec=;expires="+date1.toGMTString();
+	document.cookie = "remCnt=;expires="+date1.toGMTString();
+}
+
+// 全ての文字列 org を dest に置き換える  
+function replaceAll(str, org, dest){  
+    return str.split(org).join(dest);  
+}
+-->
+</script>
