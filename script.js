@@ -1,13 +1,14 @@
 // script.js
 
 // バージョン管理
-const Ver = '5';
+const Ver = '6';
 // 楽曲リスト (グローバル変数として定義)
 let loveliveSongs = [];
 let loveliveSunshineSongs = [];
 let nijigakuSongs = [];
 let loveliveSuperStarSongs = [];
 let loveliveHasunosoraSongs = [];
+let loveliveBluebirdSongs = [];
 let schoolIdolMusicalSongs = [];
 let yohaneSongs = [];
 let loveliveOtherSongs = [];
@@ -172,6 +173,7 @@ function initList(config) {
     if (config.nijigaku) loveliveAllSong = loveliveAllSong.concat(nijigakuSongs);
     if (config.loveliveSuperStar) loveliveAllSong = loveliveAllSong.concat(loveliveSuperStarSongs);
     if (config.loveliveHasunosora) loveliveAllSong = loveliveAllSong.concat(loveliveHasunosoraSongs);
+    if (config.loveliveBluebird) loveliveAllSong = loveliveAllSong.concat(loveliveBluebirdSongs);
     if (config.schoolIdolMusical) loveliveAllSong = loveliveAllSong.concat(schoolIdolMusicalSongs);
     if (config.yohane) loveliveAllSong = loveliveAllSong.concat(yohaneSongs);
     if (config.loveliveOther) loveliveAllSong = loveliveAllSong.concat(loveliveOtherSongs);
@@ -329,6 +331,7 @@ function getSongGenre(songName) {
     if (nijigakuSongs.includes(songName)) return "ラブライブ！虹ヶ咲学園スクールアイドル同好会";
     if (loveliveSuperStarSongs.includes(songName)) return "ラブライブ！スーパースター!!";
     if (loveliveHasunosoraSongs.includes(songName)) return "ラブライブ！蓮ノ空女学院スクールアイドルクラブ";
+    if (loveliveBluebirdSongs.includes(songName)) return "イキヅライブ！";
     if (schoolIdolMusicalSongs.includes(songName)) return "スクールアイドルミュージカル";
     if (yohaneSongs.includes(songName)) return "幻日のヨハネ";
     if (loveliveOtherSongs.includes(songName)) return "その他(共通楽曲)";
@@ -435,6 +438,7 @@ function readConfigFromDOM() {
         nijigaku: document.getElementById('ckNijigaku').checked,
         loveliveSuperStar: document.getElementById('ckLoveliveSuperStar').checked,
         loveliveHasunosora: document.getElementById('ckLoveliveHasunosora').checked,
+        loveliveBluebird: document.getElementById('ckLoveliveBluebird').checked,
         schoolIdolMusical: document.getElementById('ckSchoolIdolMusical').checked,
         yohane: document.getElementById('ckYohane').checked,
         loveliveOther: document.getElementById('ckLoveliveOther').checked
@@ -455,7 +459,7 @@ function saveState() {
 function sortRestart(flagRes) {
     const configFlag = readCookie('sortFlag');
     const config = {};
-    const configKeys = ['lovelive', 'loveliveSunshine', 'nijigaku', 'loveliveSuperStar', 'loveliveHasunosora', 'schoolIdolMusical', 'yohane', 'loveliveOther'];
+    const configKeys = ['lovelive', 'loveliveSunshine', 'nijigaku', 'loveliveSuperStar', 'loveliveHasunosora', 'loveliveBluebird', 'schoolIdolMusical', 'yohane', 'loveliveOther'];
 
     if (configFlag.length !== configKeys.length) {
         console.error("Config flag length mismatch. Resetting.");
@@ -512,6 +516,7 @@ async function initialLoad() {
     nijigakuSongs = await getFile("nijigaku.txt");
     loveliveSuperStarSongs = await getFile("lovelive_superstar.txt");
     loveliveHasunosoraSongs = await getFile("lovelive_hasunosora.txt");
+    loveliveBluebirdSongs = await getFile("lovelive_bluebird.txt");
     schoolIdolMusicalSongs = await getFile("school_idol_musical.txt");
     yohaneSongs = await getFile("yohane.txt");
     loveliveOtherSongs = await getFile("lovelive_other.txt");
@@ -522,6 +527,7 @@ async function initialLoad() {
     document.getElementById('ckNijigaku').checked = false;
     document.getElementById('ckLoveliveSuperStar').checked = false;
     document.getElementById('ckLoveliveHasunosora').checked = false;
+    document.getElementById('ckLoveliveBluebird').checked = false;
     document.getElementById('ckSchoolIdolMusical').checked = false;
     document.getElementById('ckYohane').checked = false;
     document.getElementById('ckLoveliveOther').checked = false;
@@ -532,6 +538,7 @@ async function initialLoad() {
     document.getElementById('nijigakuCnt').textContent = `(${nijigakuSongs.length}曲)`;
     document.getElementById('loveliveSuperStarCnt').textContent = `(${loveliveSuperStarSongs.length}曲)`;
     document.getElementById('loveliveHasunosoraCnt').textContent = `(${loveliveHasunosoraSongs.length}曲)`;
+    document.getElementById('loveliveBluebirdCnt').textContent = `(${loveliveBluebirdSongs.length}曲)`;
     document.getElementById('schoolIdolMusicalCnt').textContent = `(${schoolIdolMusicalSongs.length}曲)`;
     document.getElementById('yohaneCnt').textContent = `(${yohaneSongs.length}曲)`;
     document.getElementById('loveliveOtherCnt').textContent = `(${loveliveOtherSongs.length}曲)`;

@@ -117,7 +117,7 @@
 .checkbox-item:nth-child(2n) {
     border-left: 1px solid var(--border-color);
 }
-.checkbox-item:last-child, .checkbox-item:nth-last-child(2) {
+.checkbox-item:last-child {
     border-bottom: none;
 }
 
@@ -133,7 +133,7 @@
     .checkbox-item:nth-child(4n) {
         border-right: none;
     }
-    .checkbox-item:nth-last-child(-n+4) {
+    .checkbox-item:last-child {
         border-bottom: none;
     }
 }
