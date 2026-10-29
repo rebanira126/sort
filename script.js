@@ -542,6 +542,11 @@ function tryRestore() {
 async function initialLoad() {
     clearLegacyCookies();
 
+    // 「ソートのしくみ」は別タブで開く。スクリプトから開くことで、説明ページ側から自分のタブを閉じられる
+    document.getElementById('aboutLink').addEventListener('click', (e) => {
+        if (window.open('about.html', '_blank')) e.preventDefault();
+    });
+
     const lists = await Promise.all(SERIES.map(s => getFile(s.file)));
     if (lists.every(l => l.length === 0)) {
         alert('楽曲リストを読み込めませんでした。\nindex.html を直接開いている場合は、ローカルサーバー経由(python -m http.server など)で開いてください。');

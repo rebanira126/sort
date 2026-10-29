@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>ソートのしくみ | ラブライブ楽曲ソート</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .about p, .about li { font-size: 14px; line-height: 1.8; }
+        .about h2 { font-size: 18px; color: var(--primary-color); margin: 28px 0 8px; padding-bottom: 4px; border-bottom: 2px dashed var(--border-color); }
+        .about h3 { font-size: 15px; margin: 18px 0 6px; padding-left: 8px; border-left: 4px solid var(--secondary-color); }
+        .about .lead { border-left: 4px solid var(--tertiary-color); background: #FFFBE6; padding: 10px 12px; border-radius: 4px; }
+        .about ol, .about ul { padding-left: 22px; margin: 6px 0; }
+        .steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; padding: 0; list-style: none; }
+        .steps li { flex: 1 1 150px; border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 10px; position: relative; background: #fff; }
+        .steps b { display: block; color: var(--secondary-color); margin-bottom: 2px; }
+        figure { margin: 12px 0; text-align: center; }
+        figcaption { font-size: 12px; color: #777; margin-top: 4px; }
+        .fig { width: 100%; max-width: 640px; height: auto; }
+        .fig .ln { fill: none; stroke: #B8B8B8; stroke-width: 2; }
+        .fig .ln.hi { stroke: var(--primary-color); stroke-width: 4; }
+        .fig .bx { fill: #fff; stroke: #9E9E9E; stroke-width: 1.5; }
+        .fig .bx.champ { fill: #FFE3EA; stroke: var(--primary-color); stroke-width: 2.5; }
+        .fig .bx.vic { fill: #E3F5FB; stroke: var(--secondary-color); stroke-width: 2.5; }
+        .fig .grp { fill: none; stroke: var(--secondary-color); stroke-width: 2; stroke-dasharray: 6 4; }
+        .fig text { fill: var(--text-color); font-size: 15px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+        .fig .hd { font-size: 12px; font-weight: normal; fill: #777; }
+        .fig .note { font-size: 13px; text-anchor: start; fill: var(--secondary-color); }
+        .fig .bd { fill: var(--tertiary-color); stroke: #fff; stroke-width: 1.5; }
+        .fig .bt { font-size: 12px; fill: #333; }
+        .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; font-size: 12px; margin-top: 4px; }
+        .chip { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; border: 2px solid; }
+        .chip.champ { background: #FFE3EA; border-color: var(--primary-color); }
+        .chip.vic { background: #E3F5FB; border-color: var(--secondary-color); }
+        .about table { border-collapse: collapse; margin: 10px auto; font-size: 13px; }
+        .about th, .about td { border: 1px solid var(--border-color); padding: 6px 12px; text-align: right; }
+        .about th { background: var(--secondary-color); color: #fff; text-align: center; }
+        .about td:first-child { text-align: left; font-weight: bold; }
+        .about .small { font-size: 12px; color: #777; }
+        .about details { border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 12px; margin: 8px 0; }
+        .about summary { cursor: pointer; font-weight: bold; font-size: 14px; }
+        .about details p { margin: 6px 0 4px; }
+        button.back-link { background: #fff; font-family: inherit; cursor: pointer; }
+        .back-link { font-size: 13px; color: var(--text-color); text-decoration: none; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px 10px; white-space: nowrap; }
+        .back-link:hover { color: var(--primary-color); border-color: var(--primary-color); }
+    </style>
+</head>
+<body class="main-body">
+<div class="container about">
+
+    <header class="header">
+        <div class="header-content">
+            <h1>ソートのしくみ</h1>
+            <button type="button" class="back-link js-close">ヘルプを閉じる</button>
+        </div>
+    </header>
+
+    <p class="lead">2択を選んでいくだけで、あなたの好きな曲のランキングができます。このページでは、順位が決まるしくみと、質問の数が少なくて済む理由を説明します。</p>
+
+    <h2>かんたんな使い方</h2>
+    <ol>
+        <li>ソートしたいシリーズにチェックを入れます。</li>
+        <li>「終了位置」で、上位何位まで決めるかを選びます(全順位も選べます)。</li>
+        <li>「Start!」を押すと、2曲が表示されます。好きなほうを選んでください。引き分けはありません。迷ったときは直感でだいじょうぶです。</li>
+        <li>終了位置まで決まると結果が表示されます。「この結果を保存する」で、あとから見返せます。</li>
+    </ol>
+
+    <h2>順位が決まるまでの流れ</h2>
+    <ol class="steps">
+        <li><b>① まず1位を選ぶ</b>全曲をランダムに2曲ずつ組み、好きなほうを選びながら、1位を決めます。</li>
+        <li><b>② 候補をしぼる</b>2位の曲より好きな曲は、1位の曲だけです。そこで、1位の曲と直接比べた曲だけが、2位の候補になります。</li>
+        <li><b>③ 候補を比べ直す</b>候補どうしで好きなほうを選び直して、2位を決めます。</li>
+        <li><b>④ くり返す</b>3位以降も同じ手順で、終了位置まで決めていきます。</li>
+    </ol>
+
+    <h2>図で見てみよう (8曲の例)</h2>
+    <p>ここでは、A〜Hの8曲で考えます。あなたの好みは、A &gt; E &gt; C &gt; G &gt; B &gt; D &gt; F &gt; H の順だったとします(アプリは最初、この順番を知りません)。</p>
+
+    <h3>ステップ1: 2択を選び進めて、1位を決める</h3>
+    <figure>
+        <svg class="fig" viewBox="0 0 640 320" role="img" aria-label="8曲で1位を選び進める例"><polyline class="ln" points="80,38.0 125,38.0 125,74.0 80,74.0"/><polyline class="ln" points="125,56.0 170,56.0"/><polyline class="ln" points="80,110.0 125,110.0 125,146.0 80,146.0"/><polyline class="ln" points="125,128.0 170,128.0"/><polyline class="ln" points="80,182.0 125,182.0 125,218.0 80,218.0"/><polyline class="ln" points="125,200.0 170,200.0"/><polyline class="ln" points="80,254.0 125,254.0 125,290.0 80,290.0"/><polyline class="ln" points="125,272.0 170,272.0"/><polyline class="ln" points="240,56.0 285,56.0 285,128.0 240,128.0"/><polyline class="ln" points="285,92.0 330,92.0"/><polyline class="ln" points="240,200.0 285,200.0 285,272.0 240,272.0"/><polyline class="ln" points="285,236.0 330,236.0"/><polyline class="ln" points="400,92.0 445,92.0 445,236.0 400,236.0"/><polyline class="ln" points="445,164.0 490,164.0"/><polyline class="ln hi" points="80,38.0 125,38.0 125,56.0 170,56.0"/><polyline class="ln hi" points="240,56.0 285,56.0 285,92.0 330,92.0"/><polyline class="ln hi" points="400,92.0 445,92.0 445,164.0 490,164.0"/><text class="hd" x="45.0" y="12">1回目の選択</text><text class="hd" x="205.0" y="12">2回目の選択</text><text class="hd" x="365.0" y="12">3回目の選択</text><text class="hd" x="525.0" y="12">1位</text><rect class="bx champ" x="10" y="24.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="38.0">A</text><rect class="bx vic" x="10" y="60.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="74.0">B</text><rect class="bx" x="10" y="96.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="110.0">C</text><rect class="bx" x="10" y="132.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="146.0">D</text><rect class="bx" x="10" y="168.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="182.0">E</text><rect class="bx" x="10" y="204.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="218.0">F</text><rect class="bx" x="10" y="240.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="254.0">G</text><rect class="bx" x="10" y="276.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="290.0">H</text><rect class="bx champ" x="170" y="42.0" width="70" height="28" rx="6"/><text class="t" x="205.0" y="56.0">A</text><rect class="bx vic" x="170" y="114.0" width="70" height="28" rx="6"/><text class="t" x="205.0" y="128.0">C</text><rect class="bx" x="170" y="186.0" width="70" height="28" rx="6"/><text class="t" x="205.0" y="200.0">E</text><rect class="bx" x="170" y="258.0" width="70" height="28" rx="6"/><text class="t" x="205.0" y="272.0">G</text><rect class="bx champ" x="330" y="78.0" width="70" height="28" rx="6"/><text class="t" x="365.0" y="92.0">A</text><rect class="bx vic" x="330" y="222.0" width="70" height="28" rx="6"/><text class="t" x="365.0" y="236.0">E</text><rect class="bx champ" x="490" y="150.0" width="70" height="28" rx="6"/><text class="t" x="525.0" y="164.0">A</text><circle class="bd" cx="80" cy="60.0" r="10"/><text class="bt" x="80" y="60.0">①</text><circle class="bd" cx="240" cy="114.0" r="10"/><text class="bt" x="240" y="114.0">②</text><circle class="bd" cx="400" cy="222.0" r="10"/><text class="bt" x="400" y="222.0">③</text></svg>
+        <div class="legend">
+            <span><span class="chip champ"></span>1位になったA</span>
+            <span><span class="chip vic"></span>Aと直接比べた曲</span>
+            <span>① 1回目にAと比べた曲(B)</span>
+            <span>② 2回目にAと比べた曲(C)</span>
+            <span>③ 3回目にAと比べた曲(E)</span>
+        </div>
+        <figcaption>図1: 2択を選び進める流れ。8曲なら7問で1位が決まります。</figcaption>
+    </figure>
+    <p>全曲をランダムに2曲ずつ組み、好きなほうを選びます。選ばれた曲どうしをまた組み合わせて、選んでいく……をくり返すと、最後に1曲が残ります。この例では、7回の質問でAが1位に決まります。</p>
+
+    <h3>ステップ2: 「どの曲がどの曲より選ばれたか」を覚えておく</h3>
+    <figure>
+        <svg class="fig" viewBox="0 0 600 270" role="img" aria-label="選んだ結果の記録を木で表した図"><rect class="grp" x="70" y="78" width="410" height="52" rx="10"/><text class="note" x="490" y="104">← 2位候補</text><polyline class="ln" points="300,48 110,90"/><polyline class="ln" points="300,48 250,90"/><polyline class="ln" points="300,48 440,90"/><polyline class="ln" points="250,118 250,160"/><polyline class="ln" points="440,118 380,160"/><polyline class="ln" points="440,118 500,160"/><polyline class="ln" points="500,188 500,230"/><rect class="bx champ" x="276.0" y="20" width="48" height="28" rx="6"/><text class="t" x="300.0" y="34.0">A</text><rect class="bx vic" x="86.0" y="90" width="48" height="28" rx="6"/><text class="t" x="110.0" y="104.0">B</text><rect class="bx vic" x="226.0" y="90" width="48" height="28" rx="6"/><text class="t" x="250.0" y="104.0">C</text><rect class="bx vic" x="416.0" y="90" width="48" height="28" rx="6"/><text class="t" x="440.0" y="104.0">E</text><rect class="bx" x="226.0" y="160" width="48" height="28" rx="6"/><text class="t" x="250.0" y="174.0">D</text><rect class="bx" x="356.0" y="160" width="48" height="28" rx="6"/><text class="t" x="380.0" y="174.0">F</text><rect class="bx" x="476.0" y="160" width="48" height="28" rx="6"/><text class="t" x="500.0" y="174.0">G</text><rect class="bx" x="476.0" y="230" width="48" height="28" rx="6"/><text class="t" x="500.0" y="244.0">H</text></svg>
+        <figcaption>図2: 選んだ結果の記録。上の曲が、線でつながった下の曲より選ばれました。</figcaption>
+    </figure>
+    <p>アプリは、選んだ結果をすべて記録しています。ここで大事なのは、<b>2位の曲より好きな曲は、1位の曲だけ</b>ということです。つまり、2位は必ず「Aと直接比べた曲(B・C・E)」の中にいます。</p>
+    <p>1回目にAと比べたBも、2位候補に入っています。上位の曲どうしが最初に比べられても、順位が不当に低くなることはありません。</p>
+
+    <h3>ステップ3: 2位候補を比べ直す</h3>
+    <figure>
+        <svg class="fig" viewBox="0 0 480 200" role="img" aria-label="2位候補を比べ直す図"><polyline class="ln" points="80,34 125,34 125,78 80,78"/><polyline class="ln" points="125,56 170,56"/><polyline class="ln" points="240,56 285,56 285,144 80,144"/><polyline class="ln" points="285,100 330,100"/><rect class="bx" x="10" y="20.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="34.0">B</text><rect class="bx" x="10" y="64.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="78.0">C</text><rect class="bx" x="10" y="130.0" width="70" height="28" rx="6"/><text class="t" x="45.0" y="144.0">E</text><rect class="bx" x="170" y="42.0" width="70" height="28" rx="6"/><text class="t" x="205.0" y="56.0">C</text><rect class="bx champ" x="330" y="86.0" width="70" height="28" rx="6"/><text class="t" x="365.0" y="100.0">E</text><text class="note" x="412" y="100">← 2位</text><text class="hd" x="125" y="112">比較①</text><text class="hd" x="285" y="172">比較②</text></svg>
+        <figcaption>図3: 2位の決め方。BとCではCが、CとEではEが選ばれたので、2位はEです。</figcaption>
+    </figure>
+    <p>1位のAは確定したので除き、候補のB・C・Eだけで比べ直します。候補が3曲なので、質問は2回で済みます。</p>
+
+    <h3>ステップ4: 3位以降もくり返す</h3>
+    <p>2位のEを除くと、次の候補は「Eと直接比べた曲」であるF・G・Cです。この3曲を比べ直して、3位(この例ではC)が決まります。その次の候補は「Cと直接比べた曲」で……というように続けていきます。</p>
+    <p>1位から順に、「いま残っている曲の中で一番好きな曲」を選んでいくので、終了位置までの順位がすべて正確に決まります。</p>
+
+    <h2>質問の数のめやす</h2>
+    <p>すべての曲を1組ずつ比べるわけではありません。全シリーズ(908曲)を選んだ場合、すべての組み合わせを比べると約41万通りになりますが、このしくみなら全順位でも約8,700問で済みます。</p>
+    <table>
+        <thead><tr><th>選んだ曲数</th><th>上位10位まで</th><th>上位30位まで</th><th>全順位</th></tr></thead>
+        <tbody>
+            <tr><td>100曲</td><td>約150問</td><td>約280問</td><td>約590問</td></tr>
+            <tr><td>200曲</td><td>約270問</td><td>約410問</td><td>約1,400問</td></tr>
+            <tr><td>500曲</td><td>約580問</td><td>約760問</td><td>約4,300問</td></tr>
+            <tr><td>908曲</td><td>約990問</td><td>約1,190問</td><td>約8,700問</td></tr>
+        </tbody>
+    </table>
+    <p class="small">※質問の数は、選び方によって前後します。画面に出る進捗の%も、あくまで目安です。</p>
+
+    <h2>「上位◯位まで」で終了するとき</h2>
+    <p>指定した順位まで決まった時点で、ソートが終わります。質問の数が大きく減るので、上位だけ知りたいときにおすすめです。</p>
+    <p>圏外の曲どうしは比べていないため、順位をつけられません。そのため、圏外の曲は結果に表示されません。</p>
+
+    <h2>同じ曲が続かないための工夫</h2>
+    <ul>
+        <li>直前の質問に出た曲は、なるべく次の質問から外します。</li>
+        <li>これまで選ばれた回数が少ない曲を優先して出題します。同じ曲ばかりが出続けるのを防ぐためです。</li>
+        <li>同じ条件の曲どうしは、ランダムに組み合わせます。左右の配置もランダムです。</li>
+    </ul>
+    <p>それでも、選ばれ続ける曲は何度も登場します。それだけ上位にいる曲、ということです。</p>
+
+    <h2>よくある質問</h2>
+    <details>
+        <summary>最初のほうの質問は、上位の曲どうしの比較になりますか?</summary>
+        <p>1位を選ぶまでは、ランダムな組み合わせです。上位になる曲どうしが比べられることもあれば、そうでないこともあります。1位が決まってからは、上位に近い曲どうしの比較が続きます。</p>
+    </details>
+    <details>
+        <summary>最初の比較で選ばれなかった曲は、順位が低くなりますか?</summary>
+        <p>いいえ。最初の比較で選ばれなかった曲でも、「1位の曲と直接比べた曲」であれば、2位の候補に入ります(図1のBがその例です)。順位は、あなたの選択の結果から正確に決まります。</p>
+    </details>
+    <details>
+        <summary>同じ組み合わせを、何度も聞かれることはありますか?</summary>
+        <p>ありません。一度比べた2曲は、二度とは聞かれません。</p>
+    </details>
+    <details>
+        <summary>どちらも同じくらい好きで、決められません。</summary>
+        <p>引き分けはないので、そのときの気分でどちらかを選んでください。迷った組み合わせは、順位が近い曲どうしです。結果の順位に、大きな影響は出にくいでしょう。</p>
+        <p class="small">あなたの好みに矛盾がなければ、決めた順位まで正確な順位になります。「AよりB、BよりC、CよりA」のように好みが堂々巡りになる場合は、聞かれなかった組み合わせの上下までは、好みどおりにならないことがあります。</p>
+    </details>
+    <details>
+        <summary>途中でやめても大丈夫ですか?</summary>
+        <p>途中経過は自動で保存されます。同じブラウザ・同じアドレスで開き直すと、続きから再開できます。間違えたときは「ひとつ前に戻す」で、直前の選択をやり直せます。</p>
+    </details>
+    <details>
+        <summary>結果は残せますか?</summary>
+        <p>結果画面の「この結果を保存する」で保存できます。トップ画面の「過去の結果一覧」から、日時とシリーズ名つきで見返したり、削除したりできます。保存先はお使いのブラウザの中なので、ブラウザのデータを消したり、別のブラウザで開いたりすると見られなくなります。</p>
+    </details>
+
+    <div class="footer-links">
+        <button type="button" class="back-link js-close">ヘルプを閉じる</button>
+    </div>
+
+</div>
+<script>
+    // このページは、トップページから別タブで開かれる想定。タブを閉じてトップページに戻ってもらう。
+    document.querySelectorAll('.js-close').forEach(function (button) {
+        button.addEventListener('click', function () {
+            window.close();
+            // 閉じられなかった場合(URLを直接開いた場合など)
+            setTimeout(function () {
+                alert('このタブは自動で閉じられませんでした。お手数ですが、タブを手動で閉じてください。');
+            }, 300);
+        });
+    });
+</script>
+</body>
+</html>

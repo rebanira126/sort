@@ -474,3 +474,18 @@
     color: #777;
     padding: 20px 0;
 }
+
+/* フッターの「ソートのしくみ」リンク (目立たせない) */
+.footer-links a + a {
+    margin-left: 16px;
+}
+
+.about-link {
+    color: #999;
+    text-decoration: none;
+}
+
+.about-link:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
