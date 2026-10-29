@@ -19,7 +19,7 @@
             </div>
         </header>
 
-        <section class="selection-section">
+        <section id="selectionSection" class="selection-section">
             <p class="description-text">2択を選んでいくことで<b>ラブライブ楽曲の私的ランキング</b>を作れます。</p>
 
             <h2 class="section-title">ソートする楽曲の選択</h2>
@@ -37,12 +37,49 @@
                 <div class="checkbox-item"><input type="checkbox" id="ckLoveliveOther" value="1">その他(共通楽曲等) <span id="loveliveOtherCnt"></span> <a href="lovelive_other.txt" target="_blank">(リスト)</a></div>
             </div>
 
+            <div class="option-row">
+                <label for="selTopN">終了位置:</label>
+                <select id="selTopN">
+                    <option value="10">上位10位まで</option>
+                    <option value="20">上位20位まで</option>
+                    <option value="30">上位30位まで</option>
+                    <option value="50">上位50位まで</option>
+                    <option value="100">上位100位まで</option>
+                    <option value="0" selected>全順位</option>
+                </select>
+                <span class="option-note">上位だけで終了すると質問の数が大きく減ります(圏外の曲は結果に表示されません)</span>
+            </div>
+
             <div class="start-button-container">
                 <button id="startButton" class="start-button">Start! / 設定変更</button>
+            </div>
+
+            <div class="history-button-container">
+                <button id="openHistoryButton" class="secondary-button">過去の結果一覧</button>
             </div>
         </section>
 
         <section id="resultField" class="result-field hidden">
+        </section>
+
+        <div id="resultActions" class="result-actions hidden">
+            <button id="saveResultButton" class="action-button">この結果を保存する</button>
+            <div id="saveNote" class="option-note"></div>
+        </div>
+
+        <section id="historySection" class="history-section hidden">
+            <h2 class="section-title">過去の結果一覧</h2>
+            <div id="historyList"></div>
+            <div class="history-button-container">
+                <button id="historyBackButton" class="secondary-button">トップに戻る</button>
+            </div>
+        </section>
+
+        <section id="historyDetail" class="history-section hidden">
+            <div id="detailContent" class="result-field"></div>
+            <div class="history-button-container">
+                <button id="detailBackButton" class="secondary-button">一覧に戻る</button>
+            </div>
         </section>
 
         <section id="mainBattleArea" class="hidden">
@@ -60,19 +97,14 @@
                     </td>
                 </tr>
                 <tr>
-                    <td id="leftField" data-choice="-1" rowspan="2" class="choice-button">
+                    <td id="leftField" data-choice="L" class="choice-button">
                         &nbsp;
                     </td>
-                    <td class="middle-button tie-button" data-choice="0">
-                        引き分け
+                    <td class="middle-cell">
+                        <div class="middle-button undo-button" id="undoButton">ひとつ前に戻す</div>
                     </td>
-                    <td id="rightField" data-choice="1" rowspan="2" class="choice-button">
+                    <td id="rightField" data-choice="R" class="choice-button">
                         &nbsp;
-                    </td>
-                </tr>
-                <tr>
-                    <td class="middle-button undo-button" id="undoButton">
-                        ひとつ前に戻す
                     </td>
                 </tr>
             </table>

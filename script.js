@@ -1,603 +1,579 @@
 // script.js
+// 勝ち抜き戦＋再戦方式(ツリー選択ソート)による楽曲ソート
+//  1. ランダムな組み合わせで勝ち抜き戦を行い、1位を決める
+//  2. 1位が直接倒した曲だけが2位候補。候補どうしを再戦させて2位を決める。以後も同様
+//  3. 次の組み合わせは「直前に出た曲を避け、勝った回数が少ない曲を優先、同条件はランダム」で選ぶ
+//  4. 引き分けなし。終了位置を指定すると、その順位まで決めた時点で終了する(圏外は非表示)
+// 途中経過は localStorage に「乱数の種 + 回答履歴」として保存し、同じ手順を再生して復元する。
 
-// バージョン管理
-const Ver = '6';
-// 楽曲リスト (グローバル変数として定義)
-let loveliveSongs = [];
-let loveliveSunshineSongs = [];
-let nijigakuSongs = [];
-let loveliveSuperStarSongs = [];
-let loveliveHasunosoraSongs = [];
-let loveliveBluebirdSongs = [];
-let schoolIdolMusicalSongs = [];
-let yohaneSongs = [];
-let loveliveOtherSongs = [];
+'use strict';
 
-// ソート状態変数
-let loveliveAllSong = [];
-let lstMember = []; // マージソート対象のリスト配列
-let equal = []; // 引き分けを記録する配列 (曲のインデックスを格納)
-let rec = []; // 一時マージ結果用
-let cmp1, cmp2; // 比較対象リストのインデックス
-let head1, head2; // 比較対象リスト内の要素インデックス (ヘッド)
-let nrec = 0; // rec配列内の要素数
+const STORAGE_KEY = 'loveliveSort.v2';
+const SCHEMA = 2;
 
-let numQuestion = 1;
-let totalSize = 0;
-let finishSize = 0;
-let finishFlag = 0;
-let cookieRec = ""; // ソート結果記録用 ('L', 'R', 'C'のシーケンス)
-let currentChoiceResolver = null; // Promiseの解決関数
+// シリーズ定義 (表示順 = チェックボックスの並び順)
+const SERIES = [
+    { key: 'lovelive',     file: 'lovelive.txt',            checkId: 'ckLovelive',           cntId: 'loveliveCnt',           label: 'ラブライブ！' },
+    { key: 'sunshine',     file: 'lovelive_sunshine.txt',   checkId: 'ckLoveliveSunshine',   cntId: 'loveliveSunshineCnt',   label: 'サンシャイン!!' },
+    { key: 'nijigaku',     file: 'nijigaku.txt',            checkId: 'ckNijigaku',           cntId: 'nijigakuCnt',           label: '虹ヶ咲' },
+    { key: 'superstar',    file: 'lovelive_superstar.txt',  checkId: 'ckLoveliveSuperStar',  cntId: 'loveliveSuperStarCnt',  label: 'スーパースター!!' },
+    { key: 'hasunosora',   file: 'lovelive_hasunosora.txt', checkId: 'ckLoveliveHasunosora', cntId: 'loveliveHasunosoraCnt', label: '蓮ノ空' },
+    { key: 'bluebird',     file: 'lovelive_bluebird.txt',   checkId: 'ckLoveliveBluebird',   cntId: 'loveliveBluebirdCnt',   label: 'イキヅライブ！' },
+    { key: 'musical',      file: 'school_idol_musical.txt', checkId: 'ckSchoolIdolMusical',  cntId: 'schoolIdolMusicalCnt',  label: 'ミュージカル' },
+    { key: 'yohane',       file: 'yohane.txt',              checkId: 'ckYohane',             cntId: 'yohaneCnt',             label: '幻日のヨハネ' },
+    { key: 'other',        file: 'lovelive_other.txt',      checkId: 'ckLoveliveOther',      cntId: 'loveliveOtherCnt',      label: 'その他合同等' },
+];
+
+let session = null; // { seriesKeys, topN, seed, sig }  ※topN: 0 = 全順位
+let st = null;      // ソート状態
 
 // =========================================================================
-// Cookie / Compression Utility (元のコードから統合)
+// Utility
 // =========================================================================
 
-function writeCookie(name, value, expdays) {
-    const t = new Date();
-    t.setTime(t.getTime() + expdays * 24 * 60 * 60 * 1000);
-    document.cookie = `${name}=${escape(value)}; expires=${t.toGMTString()}; path=/`;
+/** シード付き乱数 (mulberry32)。同じシードなら同じ列を返す */
+function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+        a = (a + 0x6D2B79F5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
 }
 
-function readCookie(name) {
-    const allcookie = document.cookie + ';';
-    const start1 = allcookie.indexOf(name);
-    if (start1 !== -1) {
-        const target = allcookie.substring(start1, allcookie.length);
-        const start2 = target.indexOf('=', 0) + 1;
-        const end = target.indexOf(';', start2);
-        return unescape(target.substring(start2, end));
-    }
-    return "";
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-function CookieDel() {
-    const date1 = new Date();
-    date1.setTime(0);
-    document.cookie = `sortFlag=;expires=${date1.toGMTString()}; path=/`;
-    document.cookie = `sortRec=;expires=${date1.toGMTString()}; path=/`;
-    document.cookie = `Ver=;expires=${date1.toGMTString()}; path=/`;
-}
-
-// 圧縮関数 (元のcompression.jsから統合)
-function encode(str) {
-    let encodeStr = "";
-    let strMoto = str;
-    let i = 0;
-    while (i < Math.floor(strMoto.length / 3) * 3) {
-        let str1 = strMoto.substring(i, i + 3);
-        switch (str1) {
-            case "LLL": encodeStr += "a"; break;
-            case "LLR": encodeStr += "b"; break;
-            case "LLC": encodeStr += "c"; break;
-            case "LRL": encodeStr += "d"; break;
-            case "LRR": encodeStr += "e"; break;
-            case "LRC": encodeStr += "f"; break;
-            case "LCL": encodeStr += "g"; break;
-            case "LCR": encodeStr += "h"; break;
-            case "LCC": encodeStr += "i"; break;
-            case "RLL": encodeStr += "j"; break;
-            case "RLR": encodeStr += "k"; break;
-            case "RLC": encodeStr += "l"; break;
-            case "RRL": encodeStr += "m"; break;
-            case "RRR": encodeStr += "n"; break;
-            case "RRC": encodeStr += "o"; break;
-            case "RCL": encodeStr += "p"; break;
-            case "RCR": encodeStr += "q"; break;
-            case "RCC": encodeStr += "r"; break;
-            case "CLL": encodeStr += "s"; break;
-            case "CLR": encodeStr += "t"; break;
-            case "CLC": encodeStr += "u"; break;
-            case "CRL": encodeStr += "v"; break;
-            case "CRR": encodeStr += "w"; break;
-            case "CRC": encodeStr += "x"; break;
-            case "CCL": encodeStr += "y"; break;
-            case "CCR": encodeStr += "z"; break;
-            case "CCC": encodeStr += "0"; break;
-        }
-        i += 3;
-    }
-    encodeStr += strMoto.substring(i);
-    return encodeStr;
-}
-
-function decode(str) {
-    let dencodeStr = "";
-    for (let i = 0; i < str.length; i++) {
-        let str1 = str.substring(i, i + 1);
-        switch (str1) {
-            case "a": dencodeStr += "LLL"; break;
-            case "b": dencodeStr += "LLR"; break;
-            case "c": dencodeStr += "LLC"; break;
-            case "d": dencodeStr += "LRL"; break;
-            case "e": dencodeStr += "LRR"; break;
-            case "f": dencodeStr += "LRC"; break;
-            case "g": dencodeStr += "LCL"; break;
-            case "h": dencodeStr += "LCR"; break;
-            case "i": dencodeStr += "LCC"; break;
-            case "j": dencodeStr += "RLL"; break;
-            case "k": dencodeStr += "RLR"; break;
-            case "l": dencodeStr += "RLC"; break;
-            case "m": dencodeStr += "RRL"; break;
-            case "n": dencodeStr += "RRR"; break;
-            case "o": dencodeStr += "RRC"; break;
-            case "p": dencodeStr += "RCL"; break;
-            case "q": dencodeStr += "RCR"; break;
-            case "r": dencodeStr += "RCC"; break;
-            case "s": dencodeStr += "CLL"; break;
-            case "t": dencodeStr += "CLR"; break;
-            case "u": dencodeStr += "CLC"; break;
-            case "v": dencodeStr += "CRL"; break;
-            case "w": dencodeStr += "CRR"; break;
-            case "x": dencodeStr += "CRC"; break;
-            case "y": dencodeStr += "CCL"; break;
-            case "z": dencodeStr += "CCR"; break;
-            case "0": dencodeStr += "CCC"; break;
-            default: dencodeStr += str1; break;
-        }
-    }
-    return dencodeStr;
-}
-
-
-// =========================================================================
-// Data Loading / Initialization
-// =========================================================================
-
-/** 楽曲ファイルを非同期で読み込む */
+/** 楽曲リスト(テキスト)を非同期で読み込む */
 async function getFile(filePath) {
     try {
         const response = await fetch(filePath);
-        if (!response.ok) {
-            throw new Error(`Failed to load ${filePath}: ${response.statusText}`);
-        }
-        const text = await response.text();
-        // 改行コードで分割し、空行を除去してトリム
-        return text.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+        if (!response.ok) throw new Error(`Failed to load ${filePath}: ${response.statusText}`);
+        const text = (await response.text()).replace(/^\uFEFF/, '');
+        return text.split(/\r?\n/).map(x => x.trim()).filter(x => x.length > 0);
     } catch (error) {
         console.error(error);
         return [];
     }
 }
 
-/** 初期化と楽曲リストのセットアップ */
-function initList(config) {
-    lstMember = [];
-    equal = [];
-    rec = [];
-    loveliveAllSong = [];
-
-    // 選択された楽曲を結合
-    if (config.lovelive) loveliveAllSong = loveliveAllSong.concat(loveliveSongs);
-    if (config.loveliveSunshine) loveliveAllSong = loveliveAllSong.concat(loveliveSunshineSongs);
-    if (config.nijigaku) loveliveAllSong = loveliveAllSong.concat(nijigakuSongs);
-    if (config.loveliveSuperStar) loveliveAllSong = loveliveAllSong.concat(loveliveSuperStarSongs);
-    if (config.loveliveHasunosora) loveliveAllSong = loveliveAllSong.concat(loveliveHasunosoraSongs);
-    if (config.loveliveBluebird) loveliveAllSong = loveliveAllSong.concat(loveliveBluebirdSongs);
-    if (config.schoolIdolMusical) loveliveAllSong = loveliveAllSong.concat(schoolIdolMusicalSongs);
-    if (config.yohane) loveliveAllSong = loveliveAllSong.concat(yohaneSongs);
-    if (config.loveliveOther) loveliveAllSong = loveliveAllSong.concat(loveliveOtherSongs);
-
-    if (loveliveAllSong.length === 0) {
-        alert('楽曲が選択されていません。最低1つチェックを入れてください。');
-        return false;
+/** 曲リストの内容から署名を作る (リスト更新で中断データが合わなくなるのを検出する) */
+function signature(songs) {
+    const str = songs.map(s => s.key + '|' + s.name).join('\n');
+    let h = 5381;
+    for (let i = 0; i < str.length; i++) {
+        h = (((h << 5) + h) + str.charCodeAt(i)) | 0;
     }
+    return songs.length + ':' + (h >>> 0).toString(36);
+}
 
-    // 1曲ずつを要素とするリストを作成
-    for (let i = 0; i < loveliveAllSong.length; i++) {
-        lstMember.push([i]); // 曲のインデックスを格納
-        equal.push(-1); // 全て-1で初期化
+/** 選択されたシリーズから曲オブジェクトの配列を作る (同名曲もシリーズ別に別の曲として扱う) */
+function buildSongs(seriesKeys) {
+    const songs = [];
+    for (const s of SERIES) {
+        if (!seriesKeys.includes(s.key)) continue;
+        for (const name of (s.songs || [])) {
+            songs.push({ name, key: s.key, label: s.label });
+        }
     }
-
-    totalSize = loveliveAllSong.length;
-    nrec = 0;
-
-    // 最初の比較対象のインデックスを設定 (要素が1つ以上のリストのみを対象とする)
-    if (lstMember.length > 1) {
-        cmp1 = lstMember.length - 2;
-        cmp2 = lstMember.length - 1;
-    } else {
-        // 曲が1曲しかない場合は即終了
-        finishFlag = 1;
-        showResult();
-        return true;
-    }
-
-    head1 = 0;
-    head2 = 0;
-    numQuestion = 1;
-    finishSize = 0;
-    finishFlag = 0;
-    cookieRec = "";
-    rec = new Array(loveliveAllSong.length);
-
-    // DOMの表示/非表示を切り替え
-    document.getElementById("resultField").classList.add('hidden');
-    document.getElementById("mainBattleArea").classList.remove('hidden');
-
-    return true;
+    return songs;
 }
 
 // =========================================================================
-// Sorting Core (バグ修正ロジック)
+// Storage (localStorage)
 // =========================================================================
 
-/** * リストのソート（マージソートの1ステップ）を実行する
- * @param {number} flag -1:左勝ち, 0:引き分け, 1:右勝ち
- */
-function sortList(flag) {
-    if (finishFlag === 1) return;
-
-    // 1. ソート情報の記録
-    let sortrecValue;
-    if (flag === 1) {
-        sortrecValue = "R";
-    } else if (flag === 0) {
-        sortrecValue = "C";
-    } else if (flag === -1) {
-        sortrecValue = "L";
+function saveState() {
+    if (!session || !st) return;
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            schema: SCHEMA,
+            series: session.seriesKeys,
+            topN: session.topN,
+            seed: session.seed,
+            sig: session.sig,
+            answers: st.answers,
+            resultId: session.resultId || null,
+        }));
+    } catch (e) {
+        console.warn('保存に失敗しました', e);
     }
-    cookieRec += sortrecValue;
+}
 
-    // 2. レコードの格納とヘッドの更新 
-    
-    if (flag < 0) { // 左が勝ち (L)
-        rec[nrec++] = lstMember[cmp1][head1++];
-    } else if (flag > 0) { // 右が勝ち (R)
-        rec[nrec++] = lstMember[cmp2][head2++];
-    } else { // 引き分け (C)
-        // 引き分けの場合は、両方の要素を格納し、equalを設定
-        equal[lstMember[cmp1][head1]] = lstMember[cmp2][head2];
-        equal[lstMember[cmp2][head2]] = lstMember[cmp1][head1]; // 双方向で設定
-        rec[nrec++] = lstMember[cmp1][head1++];
-        rec[nrec++] = lstMember[cmp2][head2++];
+function loadSaved() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const d = JSON.parse(raw);
+        if (!d || d.schema !== SCHEMA || !Array.isArray(d.series) || typeof d.answers !== 'string') return null;
+        if (!d.series.every(k => SERIES.some(s => s.key === k))) return null;
+        return d;
+    } catch (e) {
+        return null;
     }
-    
-    // 3. 引き分けの連鎖処理 (recに格納された要素を基に、次の要素が同順位なら追加)
-    // 最後にrecに追加された要素の同順位チェックをheadが進むまで繰り返す
-    
-    // (A) リスト1の要素が残っていて、かつ、直前の要素と引き分け連鎖しているかチェック
-    while (head1 < lstMember[cmp1].length && equal[rec[nrec - 1]] === lstMember[cmp1][head1]) {
-        rec[nrec++] = lstMember[cmp1][head1++];
-    }
-    // (B) リスト2の要素が残っていて、かつ、直前の要素と引き分け連鎖しているかチェック
-    while (head2 < lstMember[cmp2].length && equal[rec[nrec - 1]] === lstMember[cmp2][head2]) {
-        rec[nrec++] = lstMember[cmp2][head2++];
-    }
+}
 
+function clearSaved() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+}
 
-    // 4. 片方のリストを走査し終えた後の処理（残りの要素をコピー）
-    if (head1 === lstMember[cmp1].length) {
-        // リストcmp1が走査済 - リストcmp2の残りを全てコピー
-        while (head2 < lstMember[cmp2].length){
-            rec[nrec++] = lstMember[cmp2][head2++];
+/** 旧バージョン(Cookie保存)の中断データを削除する */
+function clearLegacyCookies() {
+    try {
+        for (const name of ['sortFlag', 'sortRec', 'remRec', 'remCnt', 'Ver']) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
         }
-    } else if (head2 === lstMember[cmp2].length) {
-        // リストcmp2が走査済 - リストcmp1の残りを全てコピー
-        while (head1 < lstMember[cmp1].length){
-            rec[nrec++] = lstMember[cmp1][head1++];
-        }
-    }
-    
-    // 5. マージ完了の判定と次の比較へ
-    if (head1 === lstMember[cmp1].length && head2 === lstMember[cmp2].length) {
-        // マージ完了
-        
-        // lstMember[cmp1]にrecの内容を上書き
-        lstMember[cmp1].length = 0;
-        for (let i = 0; i < nrec; i++) {
-            lstMember[cmp1].push(rec[i]);
-        }
-        
-        // cmp2を削除
-        lstMember.splice(cmp2, 1);
-        
-        // 次の比較対象リストのインデックスを更新
-        cmp1--; 
-        cmp2 = cmp1 + 1;
-        head1 = 0;
-        head2 = 0;
-        finishSize++;
-
-        nrec = 0;
-        rec = new Array(loveliveAllSong.length); // recを再初期化
-        
-        // 終了判定
-        if (lstMember.length === 1) {
-            finishFlag = 1;
-            showResult();
-        } else if (cmp2 >= lstMember.length) {
-            // 現在のcmp1のリストが最後のリストの場合、次の比較は最初のリストから開始
-            cmp1 = 0;
-            cmp2 = 1;
-        }
-    }
-
-    if (finishFlag === 0) {
-        numQuestion++;
-    }
-
-    saveState();
+    } catch (e) { /* ignore */ }
 }
 
 // =========================================================================
-// UI / Display
+// Sorting core
 // =========================================================================
 
-/** 楽曲がどの作品かを取得 */
-function getSongGenre(songName) {
-    if (loveliveSongs.includes(songName)) return "ラブライブ！";
-    if (loveliveSunshineSongs.includes(songName)) return "ラブライブ！サンシャイン!!";
-    if (nijigakuSongs.includes(songName)) return "ラブライブ！虹ヶ咲学園スクールアイドル同好会";
-    if (loveliveSuperStarSongs.includes(songName)) return "ラブライブ！スーパースター!!";
-    if (loveliveHasunosoraSongs.includes(songName)) return "ラブライブ！蓮ノ空女学院スクールアイドルクラブ";
-    if (loveliveBluebirdSongs.includes(songName)) return "イキヅライブ！";
-    if (schoolIdolMusicalSongs.includes(songName)) return "スクールアイドルミュージカル";
-    if (yohaneSongs.includes(songName)) return "幻日のヨハネ";
-    if (loveliveOtherSongs.includes(songName)) return "その他(共通楽曲)";
-    return "不明";
-}
-
-/** 比較する2曲を表示 */
-function showImage() {
-    if (finishFlag === 1) return;
-
-    const percent = Math.floor(finishSize * 100 / (totalSize > 1 ? totalSize - 1 : 1));
-    const str0 = `Sort No.${numQuestion}<br>${percent}% sorted.`;
-
-    // 比較対象の曲名を取得
-    const str1 = loveliveAllSong[lstMember[cmp1][head1]];
-    const str2 = loveliveAllSong[lstMember[cmp2][head2]];
-    
-    document.getElementById("battleNumber").innerHTML = str0;
-    document.getElementById("leftField").innerHTML = str1;
-    document.getElementById("rightField").innerHTML = str2;
-}
-
-/** 結果の表示 */
-function showResult() {
-    let ranking = 1;
-    let sameRank = 1;
-    let str = "";
-    
-    str += `<h2 class="result-title">ソート結果</h2>`;
-    str += `<table class="result-table">`;
-    str += `<thead><tr><th>順位<\/th><th>曲名<\/th><th>作品<\/th><\/tr></thead><tbody>`;
-
-    // 最終結果はlstMember[0]に格納
-    for (let i = 0; i < loveliveAllSong.length; i++) {
-        const songIndex = lstMember[0][i];
-        const songName = loveliveAllSong[songIndex];
-        const genre = getSongGenre(songName);
-
-        str += `<tr><td>${ranking}<\/td><td>${songName}<\/td><td>${genre}<\/td><\/tr>`;
-        
-        if (i < loveliveAllSong.length - 1) {
-            // 引き分け判定
-            if (equal[songIndex] === lstMember[0][i + 1]) {
-                sameRank++;
-            } else {
-                ranking += sameRank;
-                sameRank = 1;
-            }
-        }
-    }
-    str += `</tbody><\/table>`;
-    
-    document.getElementById("resultField").innerHTML = str;
-    
-    document.getElementById("resultField").classList.remove('hidden');
-    document.getElementById("mainBattleArea").classList.add('hidden');
-}
-
-
-// =========================================================================
-// Main Loop / State Management
-// =========================================================================
-
-/** ユーザーの選択を待機するPromise */
-function waitForChoice() {
-    return new Promise(resolve => {
-        currentChoiceResolver = resolve;
-    });
-}
-
-/** 選択ボタンクリックハンドラ */
-function handleChoiceClick(event) {
-    if (currentChoiceResolver && finishFlag === 0) {
-        const choice = parseInt(event.currentTarget.dataset.choice);
-        currentChoiceResolver(choice);
-        currentChoiceResolver = null;
-    }
-}
-
-/** メインソート処理 */
-async function startSortProcess(startFromScratch = true) {
-    if (startFromScratch) {
-        const config = readConfigFromDOM();
-        if (!initList(config)) {
-            return;
-        }
-    } else {
-        // 復元処理はsortRestartで対応
-    }
-
-    // ソートが完了するまでループ
-    while (finishFlag === 0) {
-        showImage();
-        const choice = await waitForChoice();
-        sortList(choice);
-    }
-}
-
-/** 設定の読み取り */
-function readConfigFromDOM() {
+function newState(songs, topN, seed) {
+    const n = songs.length;
     return {
-        lovelive: document.getElementById('ckLovelive').checked,
-        loveliveSunshine: document.getElementById('ckLoveliveSunshine').checked,
-        nijigaku: document.getElementById('ckNijigaku').checked,
-        loveliveSuperStar: document.getElementById('ckLoveliveSuperStar').checked,
-        loveliveHasunosora: document.getElementById('ckLoveliveHasunosora').checked,
-        loveliveBluebird: document.getElementById('ckLoveliveBluebird').checked,
-        schoolIdolMusical: document.getElementById('ckSchoolIdolMusical').checked,
-        yohane: document.getElementById('ckYohane').checked,
-        loveliveOther: document.getElementById('ckLoveliveOther').checked
+        songs,
+        n,
+        target: (topN > 0 && topN < n) ? topN : n, // 何位まで決めるか
+        rng: mulberry32(seed),
+        ch: Array.from({ length: n }, () => []),   // ch[x] = xが直接勝った曲(子)
+        roots: Array.from({ length: n }, (_, i) => i), // まだ誰にも負けていない曲(次の順位の候補)
+        last: [-1, -1],                            // 直前の質問に出た2曲
+        out: [],                                   // 確定した順位 (out[0]が1位)
+        answers: '',                               // 回答履歴 'L' / 'R'
+        q: null,                                   // 現在の質問 { left, right }
+        done: false,
     };
 }
 
-/** 状態をCookieに保存 */
-function saveState() {
-    const config = readConfigFromDOM();
-    const flag = Object.values(config).map(val => val ? '1' : '0').join('');
-
-    writeCookie('sortFlag', flag, 365);
-    writeCookie('sortRec', encode(cookieRec), 365);
-    writeCookie('Ver', Ver, 365);
-}
-
-/** 状態の復元 (sortRestart) */
-function sortRestart(flagRes) {
-    const configFlag = readCookie('sortFlag');
-    const config = {};
-    const configKeys = ['lovelive', 'loveliveSunshine', 'nijigaku', 'loveliveSuperStar', 'loveliveHasunosora', 'loveliveBluebird', 'schoolIdolMusical', 'yohane', 'loveliveOther'];
-
-    if (configFlag.length !== configKeys.length) {
-        console.error("Config flag length mismatch. Resetting.");
-        CookieDel();
-        return;
-    }
-
-    configKeys.forEach((key, i) => {
-        const isChecked = configFlag.charAt(i) === '1';
-        config[key] = isChecked;
-        document.getElementById(`ck${key.charAt(0).toUpperCase() + key.slice(1)}`).checked = isChecked;
-    });
-
-    if (!initList(config)) {
-        return;
-    }
-    
-    let recordedRec = readCookie('sortRec');
-    recordedRec = decode(recordedRec);
-    let resLenCnt = recordedRec.length;
-
-    if (flagRes === -1) {
-        // アンドゥ処理
-        resLenCnt = resLenCnt - 1;
-    }
-    
-    CookieDel(); // 古いCookieをクリアし、sortListで新しいCookieを書き込む準備
-
-    // 復元処理の実行 (Promiseベースではないため、ループで実行)
-    for (let i = 0; i < resLenCnt; i++) {
-        const choice = recordedRec.substring(i, i + 1);
-        let flag;
-        if (choice === "L") flag = -1;
-        else if (choice === "R") flag = 1;
-        else if (choice === "C") flag = 0;
-        
-        sortList(flag); 
-        // sortList内でnumQuestionがインクリメントされ、状態が更新される
-    }
-
-    // 復元後、メインソートプロセスを再開
-    startSortProcess(false);
-}
-
-// =========================================================================
-// Event Listeners / Initial Load
-// =========================================================================
-
-/** 初期ロード処理 */
-async function initialLoad() {
-    // 楽曲リストの読み込み
-    loveliveSongs = await getFile("lovelive.txt");
-    loveliveSunshineSongs = await getFile("lovelive_sunshine.txt");
-    nijigakuSongs = await getFile("nijigaku.txt");
-    loveliveSuperStarSongs = await getFile("lovelive_superstar.txt");
-    loveliveHasunosoraSongs = await getFile("lovelive_hasunosora.txt");
-    loveliveBluebirdSongs = await getFile("lovelive_bluebird.txt");
-    schoolIdolMusicalSongs = await getFile("school_idol_musical.txt");
-    yohaneSongs = await getFile("yohane.txt");
-    loveliveOtherSongs = await getFile("lovelive_other.txt");
-
-    // 初期チェックボックス設定（全てOFF）
-    document.getElementById('ckLovelive').checked = false;
-    document.getElementById('ckLoveliveSunshine').checked = false;
-    document.getElementById('ckNijigaku').checked = false;
-    document.getElementById('ckLoveliveSuperStar').checked = false;
-    document.getElementById('ckLoveliveHasunosora').checked = false;
-    document.getElementById('ckLoveliveBluebird').checked = false;
-    document.getElementById('ckSchoolIdolMusical').checked = false;
-    document.getElementById('ckYohane').checked = false;
-    document.getElementById('ckLoveliveOther').checked = false;
-    
-    // 曲数表示の更新
-    document.getElementById('loveliveCnt').textContent = `(${loveliveSongs.length}曲)`;
-    document.getElementById('loveliveSunshineCnt').textContent = `(${loveliveSunshineSongs.length}曲)`;
-    document.getElementById('nijigakuCnt').textContent = `(${nijigakuSongs.length}曲)`;
-    document.getElementById('loveliveSuperStarCnt').textContent = `(${loveliveSuperStarSongs.length}曲)`;
-    document.getElementById('loveliveHasunosoraCnt').textContent = `(${loveliveHasunosoraSongs.length}曲)`;
-    document.getElementById('loveliveBluebirdCnt').textContent = `(${loveliveBluebirdSongs.length}曲)`;
-    document.getElementById('schoolIdolMusicalCnt').textContent = `(${schoolIdolMusicalSongs.length}曲)`;
-    document.getElementById('yohaneCnt').textContent = `(${yohaneSongs.length}曲)`;
-    document.getElementById('loveliveOtherCnt').textContent = `(${loveliveOtherSongs.length}曲)`;
-
-    // イベントリスナーの設定
-    document.getElementById('startButton').addEventListener('click', () => {
-        if (readCookie('sortRec') !== "") {
-            if (window.confirm('最初からやり直しになりますがよろしいですか？')) {
-                CookieDel();
-                startSortProcess(true);
-            }
-        } else {
-            startSortProcess(true);
+/** 次の質問を用意する。必要なら候補が1曲に絞られた時点で順位を確定させる */
+function advance(s) {
+    while (true) {
+        if (s.out.length >= s.target || s.roots.length === 0) {
+            s.done = true;
+            s.q = null;
+            return;
         }
+        if (s.roots.length === 1) {
+            // 候補が1曲 = この曲が次の順位。取り出して、その曲が直接倒した曲を新しい候補にする
+            const r = s.roots[0];
+            s.out.push(r);
+            s.roots = s.ch[r];
+            continue;
+        }
+        s.q = pickPair(s);
+        return;
+    }
+}
+
+/** 次に比較する2曲を選ぶ: 直前の曲を避け、勝った回数が少ない曲を優先、同条件はランダム */
+function pickPair(s) {
+    let pool = s.roots.filter(x => x !== s.last[0] && x !== s.last[1]);
+    if (pool.length < 2) pool = s.roots;
+
+    let a = -1, b = -1, ka = null, kb = null;
+    const less = (x, y) => x[0] < y[0] || (x[0] === y[0] && x[1] < y[1]);
+    for (const x of pool) {
+        const k = [s.ch[x].length, s.rng()];
+        if (ka === null || less(k, ka)) {
+            b = a; kb = ka;
+            a = x; ka = k;
+        } else if (kb === null || less(k, kb)) {
+            b = x; kb = k;
+        }
+    }
+    // 左右の配置もランダム
+    return s.rng() < 0.5 ? { left: a, right: b } : { left: b, right: a };
+}
+
+/** 回答を反映する ('L' = 左を選択, 'R' = 右を選択) */
+function answer(s, side) {
+    if (s.done || !s.q) return;
+    const w = side === 'L' ? s.q.left : s.q.right;
+    const l = side === 'L' ? s.q.right : s.q.left;
+    s.ch[w].push(l);
+    s.roots = s.roots.filter(x => x !== l);
+    s.last = [s.q.left, s.q.right];
+    s.answers += side;
+    advance(s);
+}
+
+/** 保存した条件と回答履歴から状態を再生する */
+function replay(songs, topN, seed, answers) {
+    const s = newState(songs, topN, seed);
+    advance(s);
+    for (const c of answers) {
+        if (s.done) break;
+        if (c === 'L' || c === 'R') answer(s, c);
+    }
+    return s;
+}
+
+/** 総比較回数の目安 (進捗表示用) */
+function estimateTotal(s) {
+    const per = Math.max(1, Math.log2(Math.max(s.n, 2)) - 1.2);
+    return Math.max(1, Math.round((s.n - 1) + s.target * per));
+}
+
+// =========================================================================
+// Saved results (localStorage)
+// =========================================================================
+
+const RESULTS_KEY = 'loveliveSort.results.v1';
+
+function isValidResult(r) {
+    return !!r && typeof r.id === 'string' && typeof r.savedAt === 'number'
+        && Array.isArray(r.series) && Array.isArray(r.songs)
+        && r.songs.every(x => Array.isArray(x) && typeof x[0] === 'string' && typeof x[1] === 'string');
+}
+
+/** 保存済みの結果を新しい順で返す */
+function loadResults() {
+    try {
+        const raw = localStorage.getItem(RESULTS_KEY);
+        if (!raw) return [];
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) return [];
+        return list.filter(isValidResult).sort((a, b) => b.savedAt - a.savedAt);
+    } catch (e) {
+        return [];
+    }
+}
+
+function writeResults(list) {
+    try {
+        localStorage.setItem(RESULTS_KEY, JSON.stringify(list));
+        return true;
+    } catch (e) {
+        console.warn('結果の保存に失敗しました', e);
+        return false;
+    }
+}
+
+function seriesLabel(key) {
+    const s = SERIES.find(x => x.key === key);
+    return s ? s.label : key;
+}
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+function formatDateTime(ts) {
+    const d = new Date(ts);
+    return `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/** 現在の結果が保存済みか */
+function isCurrentResultSaved() {
+    return !!(session && session.resultId && loadResults().some(r => r.id === session.resultId));
+}
+
+/** 現在の結果を保存する。保存できたら true */
+function saveResult() {
+    if (!st || !st.done || !session) return false;
+    if (isCurrentResultSaved()) return true;
+
+    const entry = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        savedAt: Date.now(),
+        series: session.seriesKeys.slice(),
+        topN: session.topN,
+        total: st.n,
+        target: st.target,
+        songs: st.out.map(i => [st.songs[i].name, st.songs[i].key]), // [曲名, シリーズキー]
+    };
+    if (!writeResults(loadResults().concat(entry))) {
+        alert('結果を保存できませんでした。ブラウザの保存領域がいっぱいか、保存が許可されていない可能性があります。');
+        return false;
+    }
+    session.resultId = entry.id;
+    saveState();
+    return true;
+}
+
+function deleteResult(id) {
+    return writeResults(loadResults().filter(r => r.id !== id));
+}
+
+function describeRange(r) {
+    return r.target < r.total ? `上位${r.target}位まで (全${r.total}曲中)` : `全順位 (${r.total}曲)`;
+}
+
+// =========================================================================
+// UI
+// =========================================================================
+
+let view = 'top';     // 'top' | 'history' | 'detail'
+let detailId = null;  // 閲覧中の保存済み結果ID
+
+function readConfigFromDOM() {
+    const seriesKeys = SERIES.filter(s => document.getElementById(s.checkId).checked).map(s => s.key);
+    const topN = parseInt(document.getElementById('selTopN').value, 10) || 0;
+    return { seriesKeys, topN };
+}
+
+function applyConfigToDOM(seriesKeys, topN) {
+    for (const s of SERIES) {
+        document.getElementById(s.checkId).checked = seriesKeys.includes(s.key);
+    }
+    const sel = document.getElementById('selTopN');
+    sel.value = String(topN);
+    if (sel.value !== String(topN)) sel.value = '0';
+}
+
+function setVisible(id, visible) {
+    document.getElementById(id).classList.toggle('hidden', !visible);
+}
+
+function makeEl(tag, className, text) {
+    const e = document.createElement(tag);
+    if (className) e.className = className;
+    if (text !== undefined) e.textContent = text;
+    return e;
+}
+
+function setSongCell(el, song) {
+    el.replaceChildren(makeEl('div', 'song-name', song.name), makeEl('div', 'song-series', song.label));
+}
+
+/** 結果表のHTML。rows = [{ name, label }] */
+function buildResultTable(rows) {
+    let str = `<table class="result-table">`;
+    str += `<thead><tr><th>順位</th><th>曲名</th><th>シリーズ</th></tr></thead><tbody>`;
+    rows.forEach((r, i) => {
+        str += `<tr><td>${i + 1}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.label)}</td></tr>`;
+    });
+    str += `</tbody></table>`;
+    return str;
+}
+
+function fillQuestion() {
+    const no = st.answers.length + 1;
+    const pct = Math.min(99, Math.floor(st.answers.length * 100 / estimateTotal(st)));
+    document.getElementById('battleNumber').innerHTML =
+        `Sort No.${no}<br>${st.out.length} / ${st.target} 位 確定 (進捗の目安 ${pct}%)`;
+    setSongCell(document.getElementById('leftField'), st.songs[st.q.left]);
+    setSongCell(document.getElementById('rightField'), st.songs[st.q.right]);
+}
+
+function fillResult() {
+    let str = `<h2 class="result-title">ソート結果</h2>`;
+    if (st.target < st.n) {
+        str += `<p class="result-note">全${st.n}曲中、上位${st.target}位まで</p>`;
+    }
+    str += buildResultTable(st.out.map(idx => ({ name: st.songs[idx].name, label: st.songs[idx].label })));
+    document.getElementById('resultField').innerHTML = str;
+
+    const saved = isCurrentResultSaved();
+    const btn = document.getElementById('saveResultButton');
+    btn.disabled = saved;
+    btn.textContent = saved ? '保存済み' : 'この結果を保存する';
+    document.getElementById('saveNote').textContent =
+        saved ? '保存しました。トップ画面の「過去の結果一覧」から見られます。' : '';
+}
+
+function fillHistory() {
+    const results = loadResults();
+    const list = document.getElementById('historyList');
+    if (results.length === 0) {
+        list.replaceChildren(makeEl('p', 'history-empty', '保存された結果はありません。'));
+        return;
+    }
+    list.replaceChildren(...results.map(r => {
+        const item = makeEl('div', 'history-item');
+
+        const info = makeEl('div', 'history-info');
+        info.appendChild(makeEl('div', 'history-date', formatDateTime(r.savedAt)));
+        info.appendChild(makeEl('div', 'history-series', '対象: ' + r.series.map(seriesLabel).join('、')));
+        info.appendChild(makeEl('div', 'history-range', describeRange(r)));
+
+        const buttons = makeEl('div', 'history-buttons');
+        const view_ = makeEl('button', 'small-button', '閲覧');
+        view_.addEventListener('click', () => openDetail(r.id));
+        const del = makeEl('button', 'small-button danger-button', '削除');
+        del.addEventListener('click', () => confirmDelete(r.id));
+        buttons.appendChild(view_);
+        buttons.appendChild(del);
+
+        item.appendChild(info);
+        item.appendChild(buttons);
+        return item;
+    }));
+}
+
+function fillDetail() {
+    const r = loadResults().find(x => x.id === detailId);
+    if (!r) { // 見つからなければ一覧へ
+        view = 'history';
+        render();
+        return;
+    }
+    const box = document.getElementById('detailContent');
+    let str = `<h2 class="result-title">保存した結果</h2>`;
+    str += `<p class="result-note">保存日時: ${escapeHtml(formatDateTime(r.savedAt))}<br>`
+        + `対象: ${escapeHtml(r.series.map(seriesLabel).join('、'))}<br>`
+        + `${escapeHtml(describeRange(r))}</p>`;
+    str += buildResultTable(r.songs.map(([name, key]) => ({ name, label: seriesLabel(key) })));
+    box.innerHTML = str;
+}
+
+/** 現在のビューに合わせて表示を更新する */
+function render() {
+    const top = view === 'top';
+    const sorting = top && !!st && !st.done;
+    const finished = top && !!st && st.done;
+
+    setVisible('selectionSection', top);
+    setVisible('mainBattleArea', sorting);
+    setVisible('resultField', finished);
+    setVisible('resultActions', finished);
+    setVisible('historySection', view === 'history');
+    setVisible('historyDetail', view === 'detail');
+
+    document.getElementById('openHistoryButton').textContent = `過去の結果一覧 (${loadResults().length})`;
+
+    if (sorting) fillQuestion();
+    if (finished) fillResult();
+    if (view === 'history') fillHistory();
+    if (view === 'detail') fillDetail();
+}
+
+// =========================================================================
+// Actions
+// =========================================================================
+
+function startNew() {
+    const { seriesKeys, topN } = readConfigFromDOM();
+    const songs = buildSongs(seriesKeys);
+    if (songs.length === 0) {
+        alert('楽曲が選択されていません。最低1つチェックを入れてください。');
+        return;
+    }
+    const seed = (Math.random() * 4294967296) >>> 0;
+    session = { seriesKeys, topN, seed, sig: signature(songs), resultId: null };
+    st = replay(songs, topN, seed, '');
+    view = 'top';
+    saveState();
+    render();
+}
+
+function handleChoice(side) {
+    if (view !== 'top' || !st || st.done) return;
+    answer(st, side);
+    saveState();
+    render();
+}
+
+function undo() {
+    if (view !== 'top' || !st || st.done || st.answers.length === 0) return;
+    st = replay(st.songs, session.topN, session.seed, st.answers.slice(0, -1));
+    saveState();
+    render();
+}
+
+function resetAll() {
+    clearSaved();
+    st = null;
+    session = null;
+    view = 'top';
+    alert('現在のソート結果をリセットしました。(保存済みの結果は残ります)');
+    render();
+}
+
+function handleSave() {
+    saveResult();
+    render();
+}
+
+function openHistory() { view = 'history'; render(); }
+function closeHistory() { view = 'top'; render(); }
+function openDetail(id) { detailId = id; view = 'detail'; render(); }
+function closeDetail() { detailId = null; view = 'history'; render(); }
+
+function confirmDelete(id) {
+    const r = loadResults().find(x => x.id === id);
+    if (!r) return;
+    if (!window.confirm(`${formatDateTime(r.savedAt)} の結果を削除します。よろしいですか？`)) return;
+    deleteResult(id);
+    render();
+}
+
+/** 保存データがあれば復元する */
+function tryRestore() {
+    const saved = loadSaved();
+    if (!saved) return;
+
+    const songs = buildSongs(saved.series);
+    if (songs.length === 0 || signature(songs) !== saved.sig) {
+        alert('楽曲データが更新されたので中断データを正しく復元できませんでした。');
+        clearSaved();
+        return;
+    }
+    if (saved.answers.length === 0) {
+        clearSaved();
+        return;
+    }
+
+    const restored = replay(songs, saved.topN, saved.seed, saved.answers);
+    const msg = restored.done
+        ? '前回の結果があるようです。表示しますか？'
+        : '中断しているデータがあるようです。復元しますか？';
+    if (!window.confirm(msg)) {
+        clearSaved();
+        return;
+    }
+    session = {
+        seriesKeys: saved.series, topN: saved.topN, seed: saved.seed, sig: saved.sig,
+        resultId: typeof saved.resultId === 'string' ? saved.resultId : null,
+    };
+    st = restored;
+    view = 'top';
+    applyConfigToDOM(saved.series, saved.topN);
+    render();
+}
+
+// =========================================================================
+// Initial load
+// =========================================================================
+
+async function initialLoad() {
+    clearLegacyCookies();
+
+    const lists = await Promise.all(SERIES.map(s => getFile(s.file)));
+    if (lists.every(l => l.length === 0)) {
+        alert('楽曲リストを読み込めませんでした。\nindex.html を直接開いている場合は、ローカルサーバー経由(python -m http.server など)で開いてください。');
+    }
+    SERIES.forEach((s, i) => {
+        s.songs = lists[i];
+        document.getElementById(s.checkId).checked = false;
+        document.getElementById(s.cntId).textContent = `(${s.songs.length}曲)`;
     });
 
+    document.getElementById('startButton').addEventListener('click', () => {
+        if (st && !st.done && st.answers.length > 0) {
+            if (!window.confirm('最初からやり直しになりますがよろしいですか？')) return;
+        }
+        startNew();
+    });
     document.getElementById('resetCookieLink').addEventListener('click', (e) => {
         e.preventDefault();
-        CookieDel();
-        alert('ソート結果をリセットしました。');
-        // ページをリロードするか、設定画面に戻るなどの処理を追加しても良い
-        document.getElementById("resultField").classList.add('hidden');
-        document.getElementById("mainBattleArea").classList.add('hidden');
+        resetAll();
     });
-
-    // 選択ボタンのイベントリスナー
-    document.querySelectorAll('.choice-button, .middle-button').forEach(button => {
-        if (button.dataset.choice !== undefined) {
-            button.addEventListener('click', handleChoiceClick);
-        }
+    document.querySelectorAll('.choice-button').forEach(button => {
+        button.addEventListener('click', () => handleChoice(button.dataset.choice));
     });
+    document.getElementById('undoButton').addEventListener('click', undo);
 
-    // アンドゥボタンのイベントリスナー
-    document.getElementById('undoButton').addEventListener('click', () => {
-        if (finishFlag === 0 && cookieRec.length > 0) {
-            // 現在のソートセッションを中断し、一つ前の状態から復元
-            if (currentChoiceResolver) {
-                // 待機中のPromiseを解決せずにnullにする
-                currentChoiceResolver = null;
-            }
-            sortRestart(-1);
-        }
-    });
+    document.getElementById('saveResultButton').addEventListener('click', handleSave);
+    document.getElementById('openHistoryButton').addEventListener('click', openHistory);
+    document.getElementById('historyBackButton').addEventListener('click', closeHistory);
+    document.getElementById('detailBackButton').addEventListener('click', closeDetail);
 
-
-    // 中断データからの復元チェック
-    if (readCookie('sortFlag') !== "" && readCookie('sortRec') !== "") {
-        if (Ver === readCookie('Ver')) {
-            if (window.confirm('中断しているデータがあるようです。復元しますか？')) {
-                sortRestart(0);
-            } else {
-                CookieDel();
-            }
-        } else {
-            alert('楽曲データが更新されたので中断データを正しく復元できませんでした。');
-            CookieDel();
-        }
-    }
+    tryRestore();
+    render();
 }
 
-// ページロード時の処理
 window.addEventListener('load', initialLoad);
